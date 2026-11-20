@@ -71,7 +71,7 @@
 ### Missing - to implement in issues 11-25
 - [x] Task 1 (issue 11): Admin API (verify mentors, reports, metrics, CSV export)
 - [x] Task 2 (issue 12): Reports and block API (user_blocks table)
-- [ ] Task 3 (issue 13): Design documentation + /design route
+- [x] Task 3 (issue 13): Design documentation + /design route
 - [ ] Task 4 (issues 14-17): Frontend gaps (onboarding, mentor browse API wiring, sessions, goals, report/block actions)
 - [ ] Task 5 (issue 18): Admin dashboard with Recharts
 - [ ] Task 6 (issue 19): PWA with vite-plugin-pwa, offline support

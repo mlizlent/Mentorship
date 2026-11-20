@@ -13,6 +13,7 @@ import MentorsPage from './pages/MentorsPage'
 import MentorDetailPage from './pages/MentorDetailPage'
 import MentorshipsPage from './pages/MentorshipsPage'
 import ProfilePage from './pages/ProfilePage'
+import DesignPage from './pages/DesignPage'
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
             <Route path="/mentors/:id" element={<MentorDetailPage />} />
             <Route path="/mentorships" element={<MentorshipsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/design" element={<DesignPage />} />
           </Route>
         </Routes>
       </BrowserRouter>
