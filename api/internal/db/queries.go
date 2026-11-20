@@ -521,4 +521,105 @@ func (q *Queries) LogAdminAccess(ctx context.Context, adminID string, action str
 	return err
 }
 
+// Policy queries
+
+type PolicyVersion struct {
+	ID          string     `db:"id"`
+	Title       string     `db:"title"`
+	Version     string     `db:"version"`
+	Content     string     `db:"content"`
+	EffectiveAt time.Time  `db:"effective_at"`
+	CreatedAt   time.Time  `db:"created_at"`
+}
+
+func (q *Queries) CreatePolicyVersion(ctx context.Context, title, version, content string) (string, error) {
+	var id string
+	err := q.conn.QueryRow(ctx, `
+		INSERT INTO policy_versions (title, version, content)
+		VALUES ($1, $2, $3)
+		RETURNING id
+	`, title, version, content).Scan(&id)
+	return id, err
+}
+
+func (q *Queries) ListPolicyVersions(ctx context.Context) ([]*PolicyVersion, error) {
+	rows, err := q.conn.Query(ctx, `
+		SELECT id, title, version, content, effective_at, created_at
+		FROM policy_versions
+		ORDER BY effective_at DESC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var policies []*PolicyVersion
+	for rows.Next() {
+		var p PolicyVersion
+		if err := rows.Scan(&p.ID, &p.Title, &p.Version, &p.Content, &p.EffectiveAt, &p.CreatedAt); err != nil {
+			return nil, err
+		}
+		policies = append(policies, &p)
+	}
+	return policies, nil
+}
+
+func (q *Queries) GetPolicyVersion(ctx context.Context, id string) (*PolicyVersion, error) {
+	var p PolicyVersion
+	err := q.conn.QueryRow(ctx, `
+		SELECT id, title, version, content, effective_at, created_at
+		FROM policy_versions
+		WHERE id = $1
+	`, id).Scan(&p.ID, &p.Title, &p.Version, &p.Content, &p.EffectiveAt, &p.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &p, nil
+}
+
+func (q *Queries) GetLatestPolicyVersion(ctx context.Context) (*PolicyVersion, error) {
+	var p PolicyVersion
+	err := q.conn.QueryRow(ctx, `
+		SELECT id, title, version, content, effective_at, created_at
+		FROM policy_versions
+		ORDER BY effective_at DESC
+		LIMIT 1
+	`).Scan(&p.ID, &p.Title, &p.Version, &p.Content, &p.EffectiveAt, &p.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &p, nil
+}
+
+type PolicyAcceptance struct {
+	ID             string     `db:"id"`
+	UserID         string     `db:"user_id"`
+	PolicyVersionID string    `db:"policy_version_id"`
+	AcceptedAt     time.Time  `db:"accepted_at"`
+	IPHash         string     `db:"ip_hash"`
+	CreatedAt      time.Time  `db:"created_at"`
+}
+
+func (q *Queries) CreatePolicyAcceptance(ctx context.Context, userID, policyVersionID, ipHash string) (string, error) {
+	var id string
+	err := q.conn.QueryRow(ctx, `
+		INSERT INTO policy_acceptances (user_id, policy_version_id, ip_hash)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (user_id, policy_version_id) DO NOTHING
+		RETURNING id
+	`, userID, policyVersionID, ipHash).Scan(&id)
+	return id, err
+}
+
+func (q *Queries) HasUserAcceptedPolicy(ctx context.Context, userID string, policyVersionID string) (bool, error) {
+	var exists bool
+	err := q.conn.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM policy_acceptances
+			WHERE user_id = $1 AND policy_version_id = $2
+		)
+	`, userID, policyVersionID).Scan(&exists)
+	return exists, err
+}
+
 var _ = fmt.Sprintf

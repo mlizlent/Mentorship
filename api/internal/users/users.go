@@ -96,6 +96,16 @@ func (s *Service) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Record code of conduct / policy acceptance
+	latestPolicy, err := s.queries.GetLatestPolicyVersion(r.Context())
+	if err == nil && latestPolicy != nil {
+		ipHash := r.Header.Get("X-Forwarded-For")
+		if ipHash == "" {
+			ipHash = r.RemoteAddr
+		}
+		_, _ = s.queries.CreatePolicyAcceptance(r.Context(), userID.String(), latestPolicy.ID, ipHash)
+	}
+
 	accessToken, err := s.authSvc.MakeAccessToken(userID.String(), req.Role)
 	if err != nil {
 		httpx.WriteError(w, "internal", "could not create token", nil)

@@ -75,7 +75,7 @@
 - [x] Task 4 (issues 14-17): Frontend gaps
 - [x] Task 5 (issue 18): Admin dashboard with Recharts
 - [x] Task 6 (issue 19): PWA with vite-plugin-pwa, offline support
-- [ ] Task 7 (issue 20): Code of conduct, safeguarding policy, policy acceptance
+- [x] Task 7 (issue 20): Code of conduct, safeguarding policy, policy acceptance
 - [ ] Task 8 (issue 21): Data protection, /me/export, DELETE /me
 - [ ] Task 9 (issue 22): Testing (backend API tests, frontend component tests, Playwright smoke test)
 - [ ] Task 10 (issue 23): Deployment (Dockerfiles, healthz/readyz, CI deploy)
@@ -84,7 +84,7 @@
 
 ### New migrations needed
 - [x] user_blocks (blocker_id, blocked_id)
-- [ ] policy_versions, policy_acceptances
+- [x] policy_versions, policy_acceptances
 - [ ] consent_events (guardian_id, mentee_id, event, timestamp, ip_hash)
 - [ ] mentor_profiles.approved_for_minors, approved_by, approved_at (add columns)
 

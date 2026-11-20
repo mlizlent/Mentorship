@@ -20,6 +20,7 @@ import (
 	"malkia-mentor/api/internal/matching"
 	"malkia-mentor/api/internal/sessions"
 	"malkia-mentor/api/internal/goals"
+	"malkia-mentor/api/internal/policies"
 	"malkia-mentor/api/internal/profiles"
 
 	"github.com/go-chi/chi/v5"
@@ -61,6 +62,7 @@ func main() {
 	sessionsService := sessions.NewService(queries, cfg)
 	goalsService := goals.NewService(queries, cfg)
 	adminService := admin.NewService(queries, cfg)
+	policiesService := policies.NewService(queries)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -128,6 +130,10 @@ func main() {
 
 		r.Route("/admin", func(r chi.Router) {
 			r.Mount("/", adminService.Routes())
+		})
+
+		r.Route("/policies", func(r chi.Router) {
+			r.Mount("/", policiesService.Routes())
 		})
 	})
 
