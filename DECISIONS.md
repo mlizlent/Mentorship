@@ -79,14 +79,14 @@
 - [x] Task 8 (issue 21): Data protection, /me/export, DELETE /me
 - [x] Task 9 (issue 22): Testing (backend API tests, frontend component tests, Playwright smoke test)
 - [x] Task 10 (issue 23): Deployment (Dockerfiles, healthz/readyz, CI deploy)
-- [ ] Task 11 (issue 24): Guardian consent flow (consent_events table, under-18 registration)
-- [ ] Task 12 (issue 25): Matching rules for under-18 (approved_for_minors on mentor_profiles)
+- [x] Task 11 (issue 24): Guardian consent flow (consent_events table, under-18 registration)
+- [x] Task 12 (issue 25): Matching rules for under-18 (approved_for_minors on mentor_profiles)
 
 ### New migrations needed
 - [x] user_blocks (blocker_id, blocked_id)
 - [x] policy_versions, policy_acceptances
 - [ ] consent_events (guardian_id, mentee_id, event, timestamp, ip_hash)
-- [ ] mentor_profiles.approved_for_minors, approved_by, approved_at (add columns)
+- [x] mentor_profiles.approved_for_minors, approved_by, approved_at (add columns)
 
 ### New config needed
 - [ ] Minimum age for registration (default 18, config min 13)

@@ -36,6 +36,7 @@ type MentorInput struct {
 	MaxMentees       int
 	ActiveMentees    int
 	Availability     map[string]bool // day -> available
+	ApprovedForMinors bool
 }
 
 type MenteeInput struct {
@@ -44,6 +45,7 @@ type MenteeInput struct {
 	Level           string // beginner, intermediate, advanced
 	Languages       []string
 	Availability    map[string]bool // day -> available
+	IsMinor         bool
 }
 
 type Service struct {
@@ -78,6 +80,15 @@ func (s *Service) Score(mentee MenteeInput, mentor MentorInput) (SignalBreakdown
 		ExperienceFit:  experienceFit,
 		Total:          math.Round(total*100) / 100,
 	}, reason
+}
+
+// IsEligible returns false when a minor mentee is paired with a mentor who
+// is not approved for working with minors. Adult mentees can match with any mentor.
+func (s *Service) IsEligible(mentee MenteeInput, mentor MentorInput) bool {
+	if mentee.IsMinor && !mentor.ApprovedForMinors {
+		return false
+	}
+	return true
 }
 
 func skillScore(interests, expertise []string) float64 {

@@ -630,4 +630,56 @@ func (q *Queries) SoftDeleteUser(ctx context.Context, id string) error {
 	return err
 }
 
+func (q *Queries) UpdateUserStatus(ctx context.Context, id, status string) error {
+	_, err := q.conn.Exec(ctx, `
+		UPDATE users SET status = $1 WHERE id = $2
+	`, status, id)
+	return err
+}
+
+// Consent event queries
+
+type ConsentEvent struct {
+	ID        string     `db:"id"`
+	GuardianID string    `db:"guardian_id"`
+	MenteeID   string     `db:"mentee_id"`
+	Event     string     `db:"event"`
+	Timestamp time.Time  `db:"timestamp"`
+	IPHash    string     `db:"ip_hash"`
+}
+
+func (q *Queries) CreateConsentEvent(ctx context.Context, guardianID, menteeID, event, ipHash string) (string, error) {
+	var id string
+	err := q.conn.QueryRow(ctx, `
+		INSERT INTO consent_events (guardian_id, mentee_id, event, ip_hash)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id
+	`, guardianID, menteeID, event, ipHash).Scan(&id)
+	return id, err
+}
+
+func (q *Queries) ListConsentEvents(ctx context.Context, menteeID string, limit int) ([]*ConsentEvent, error) {
+	rows, err := q.conn.Query(ctx, `
+		SELECT id, guardian_id, mentee_id, event, timestamp, ip_hash
+		FROM consent_events
+		WHERE mentee_id = $1
+		ORDER BY timestamp DESC
+		LIMIT $2
+	`, menteeID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var events []*ConsentEvent
+	for rows.Next() {
+		var e ConsentEvent
+		if err := rows.Scan(&e.ID, &e.GuardianID, &e.MenteeID, &e.Event, &e.Timestamp, &e.IPHash); err != nil {
+			return nil, err
+		}
+		events = append(events, &e)
+	}
+	return events, nil
+}
+
 var _ = fmt.Sprintf

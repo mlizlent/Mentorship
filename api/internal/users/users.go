@@ -58,6 +58,7 @@ type registerRequest struct {
 	County                string `json:"county" validate:"required"`
 	Language              string `json:"language" validate:"required,oneof=en sw"`
 	CodeOfConductAccepted bool   `json:"code_of_conduct_accepted" validate:"eq=true"`
+	GuardianID            string `json:"guardian_id,omitempty" validate:"omitempty,uuid"`
 }
 
 func (s *Service) Register(w http.ResponseWriter, r *http.Request) {
@@ -76,9 +77,17 @@ func (s *Service) Register(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, "validation_failed", "invalid date of birth", nil)
 		return
 	}
+
 	if time.Since(dob) < 18*365*24*time.Hour {
-		httpx.WriteError(w, "validation_failed", "sign-up for under-18s requires guardian consent, coming soon", nil)
-		return
+		if req.GuardianID == "" {
+			httpx.WriteError(w, "validation_failed", "guardian consent required for under-18 registration", nil)
+			return
+		}
+		// Verify guardian exists
+		if _, err := s.queries.GetUserByID(r.Context(), req.GuardianID); err != nil {
+			httpx.WriteError(w, "not_found", "guardian not found", nil)
+			return
+		}
 	}
 
 	if _, err := s.queries.GetUserByEmail(r.Context(), req.Email); err == nil {
@@ -106,6 +115,19 @@ func (s *Service) Register(w http.ResponseWriter, r *http.Request) {
 			ipHash = r.RemoteAddr
 		}
 		_, _ = s.queries.CreatePolicyAcceptance(r.Context(), userID.String(), latestPolicy.ID, ipHash)
+	}
+
+	// Guardian consent for under-18
+	if time.Since(dob) < 18*365*24*time.Hour {
+		if err := s.queries.UpdateUserStatus(r.Context(), userID.String(), "pending"); err != nil {
+			httpx.WriteError(w, "internal", "could not set pending status", nil)
+			return
+		}
+		ipHash := r.Header.Get("X-Forwarded-For")
+		if ipHash == "" {
+			ipHash = r.RemoteAddr
+		}
+		_, _ = s.queries.CreateConsentEvent(r.Context(), req.GuardianID, userID.String(), "guardian_consent_requested", ipHash)
 	}
 
 	accessToken, err := s.authSvc.MakeAccessToken(userID.String(), req.Role)
