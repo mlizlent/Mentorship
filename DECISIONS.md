@@ -52,3 +52,45 @@
 ## Configuration
 - All configuration comes from environment variables (see `.env.example`).
 - Matching weights, mentor capacity cap, token lifetimes all configurable.
+
+## Checklist: Existing vs Missing (issues 11-25)
+
+### Already implemented (issues 1-10)
+- [x] Repository layout, go.mod, Vite app, Makefile, docker-compose
+- [x] golangci-lint, ESLint, Prettier, .editorconfig configured
+- [x] GitHub Actions CI workflow
+- [x] .env.example files, README with local setup
+- [x] Database migrations 001-011 (users, mentor_profiles, mentee_profiles, guardians, mentorships, sessions, goals, reports, refresh_tokens, admin_access_log, notifications_outbox)
+- [x] Auth: register (adults 18+), login, refresh, logout, /me, /me PUT
+- [x] Mentor browsing: list with filters, get public profile
+- [x] Matching module: pure scoring, weighted signals, unit tests
+- [x] Frontend: app shell, Layout, UI components (Button, Input, Textarea, Select, Checkbox, Card, Badge, Modal, Toast, Avatar, Spinner, EmptyState, Tabs)
+- [x] Frontend pages: Landing, Login, Register, Home, Mentors, MentorDetail, Mentorships, Profile (all stubs)
+- [x] Frontend: API client with token refresh, TanStack Query, React Router
+
+### Missing - to implement in issues 11-25
+- [ ] Task 1 (issue 11): Admin API (verify mentors, reports, metrics, CSV export)
+- [ ] Task 2 (issue 12): Reports and block API (user_blocks table)
+- [ ] Task 3 (issue 13): Design documentation + /design route
+- [ ] Task 4 (issues 14-17): Frontend gaps (onboarding, mentor browse API wiring, sessions, goals, report/block actions)
+- [ ] Task 5 (issue 18): Admin dashboard with Recharts
+- [ ] Task 6 (issue 19): PWA with vite-plugin-pwa, offline support
+- [ ] Task 7 (issue 20): Code of conduct, safeguarding policy, policy acceptance
+- [ ] Task 8 (issue 21): Data protection, /me/export, DELETE /me
+- [ ] Task 9 (issue 22): Testing (backend API tests, frontend component tests, Playwright smoke test)
+- [ ] Task 10 (issue 23): Deployment (Dockerfiles, healthz/readyz, CI deploy)
+- [ ] Task 11 (issue 24): Guardian consent flow (consent_events table, under-18 registration)
+- [ ] Task 12 (issue 25): Matching rules for under-18 (approved_for_minors on mentor_profiles)
+
+### New migrations needed
+- [ ] user_blocks (blocker_id, blocked_id)
+- [ ] policy_versions, policy_acceptances
+- [ ] consent_events (guardian_id, mentee_id, event, timestamp, ip_hash)
+- [ ] mentor_profiles.approved_for_minors, approved_by, approved_at (add columns)
+
+### New config needed
+- [ ] Minimum age for registration (default 18, config min 13)
+- [ ] Policy version tracking
+- [ ] Data retention period for anonymization
+- [ ] Guardian consent email settings
+
