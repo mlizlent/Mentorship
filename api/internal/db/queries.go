@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 )
 
 func (q *Queries) CreateUser(ctx context.Context, id, email, passwordHash, role, fullName string, dob *string, county, language string) (*User, error) {
@@ -262,6 +263,177 @@ func (q *Queries) InsertNotification(ctx context.Context, userID, ntype, payload
 		INSERT INTO notifications_outbox (user_id, type, payload, send_at)
 		VALUES ($1, $2, $3, $4)
 	`, userID, ntype, payload, sendAt)
+	return err
+}
+
+// CreateReport inserts a new report (used by tests and service)
+func (q *Queries) CreateReport(ctx context.Context, reporterID, targetUserID, reason string) (string, error) {
+	var id string
+	err := q.conn.QueryRow(ctx, `
+		INSERT INTO reports (reporter_id, target_user_id, reason)
+		VALUES ($1, $2, $3)
+		RETURNING id
+	`, reporterID, targetUserID, reason).Scan(&id)
+	return id, err
+}
+
+// Admin queries
+
+type AdminMentor struct {
+	UserID          string     `db:"user_id"`
+	FullName        string     `db:"full_name"`
+	Email           string     `db:"email"`
+	County          string     `db:"county"`
+	Bio             string     `db:"bio"`
+	Expertise       []string   `db:"expertise"`
+	YearsExperience int        `db:"years_experience"`
+	HoursPerMonth   int        `db:"hours_per_month"`
+	Languages       []string   `db:"languages"`
+	MaxMentees      int        `db:"max_mentees"`
+	VerifiedAt      *time.Time `db:"verified_at"`
+	VerifiedBy      *string    `db:"verified_by"`
+	Status          string     `db:"status"`
+	CreatedAt       time.Time  `db:"created_at"`
+	ActiveMentees   int        `db:"active_mentees"`
+}
+
+func (q *Queries) ListMentorsForAdmin(ctx context.Context, status string, limit int, cursor string) ([]*AdminMentor, error) {
+	where := "WHERE u.deleted_at IS NULL"
+	args := []interface{}{}
+	argIdx := 1
+
+	if status == "unverified" {
+		where += fmt.Sprintf(" AND mp.verified_at IS NULL")
+	} else if status == "verified" {
+		where += fmt.Sprintf(" AND mp.verified_at IS NOT NULL")
+	}
+
+	if cursor != "" {
+		where += fmt.Sprintf(" AND u.created_at > $%d", argIdx)
+		args = append(args, cursor)
+		argIdx++
+	}
+
+	args = append(args, limit)
+	query := fmt.Sprintf(`
+		SELECT mp.user_id, u.full_name, u.email, u.county, mp.bio, mp.expertise,
+		       mp.years_experience, mp.hours_per_month, mp.languages, mp.max_mentees,
+		       mp.verified_at, mp.verified_by, u.status, u.created_at,
+		       (SELECT COUNT(*) FROM mentorships m WHERE m.mentor_id = mp.user_id AND m.status = 'active' AND m.deleted_at IS NULL) AS active_mentees
+		FROM mentor_profiles mp
+		JOIN users u ON u.id = mp.user_id
+		%s
+		ORDER BY u.created_at DESC
+		LIMIT $%d
+	`, where, argIdx)
+
+	rows, err := q.conn.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var mentors []*AdminMentor
+	for rows.Next() {
+		var m AdminMentor
+		if err := rows.Scan(
+			&m.UserID, &m.FullName, &m.Email, &m.County, &m.Bio, &m.Expertise,
+			&m.YearsExperience, &m.HoursPerMonth, &m.Languages, &m.MaxMentees,
+			&m.VerifiedAt, &m.VerifiedBy, &m.Status, &m.CreatedAt, &m.ActiveMentees,
+		); err != nil {
+			return nil, err
+		}
+		mentors = append(mentors, &m)
+	}
+	return mentors, nil
+}
+
+func (q *Queries) UpdateMentorVerification(ctx context.Context, mentorID string, verified bool, adminID string) error {
+	if verified {
+		_, err := q.conn.Exec(ctx, `
+			UPDATE mentor_profiles SET verified_at = NOW(), verified_by = $1
+			WHERE user_id = $2
+		`, adminID, mentorID)
+		return err
+	}
+	_, err := q.conn.Exec(ctx, `
+		UPDATE mentor_profiles SET verified_at = NULL, verified_by = NULL
+		WHERE user_id = $1
+	`, mentorID)
+	return err
+}
+
+type AdminReport struct {
+	ID            string     `db:"id"`
+	ReporterID    string     `db:"reporter_id"`
+	TargetUserID  string     `db:"target_user_id"`
+	Reason        string     `db:"reason"`
+	Status        string     `db:"status"`
+	ResolvedBy    *string    `db:"resolved_by"`
+	ResolutionNote string    `db:"resolution_note"`
+	CreatedAt     time.Time  `db:"created_at"`
+	UpdatedAt     time.Time  `db:"updated_at"`
+}
+
+func (q *Queries) ListReportsForAdmin(ctx context.Context, status string, limit int, cursor string) ([]*AdminReport, error) {
+	where := "WHERE 1=1"
+	args := []interface{}{}
+	argIdx := 1
+
+	if status != "" {
+		where += fmt.Sprintf(" AND status = $%d", argIdx)
+		args = append(args, status)
+		argIdx++
+	}
+
+	if cursor != "" {
+		where += fmt.Sprintf(" AND created_at > $%d", argIdx)
+		args = append(args, cursor)
+		argIdx++
+	}
+
+	args = append(args, limit)
+	query := fmt.Sprintf(`
+		SELECT id, reporter_id, target_user_id, reason, status, resolved_by, resolution_note, created_at, updated_at
+		FROM reports
+		%s
+		ORDER BY created_at DESC
+		LIMIT $%d
+	`, where, argIdx)
+
+	rows, err := q.conn.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var reports []*AdminReport
+	for rows.Next() {
+		var r AdminReport
+		if err := rows.Scan(
+			&r.ID, &r.ReporterID, &r.TargetUserID, &r.Reason, &r.Status,
+			&r.ResolvedBy, &r.ResolutionNote, &r.CreatedAt, &r.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		reports = append(reports, &r)
+	}
+	return reports, nil
+}
+
+func (q *Queries) ResolveReport(ctx context.Context, reportID string, adminID string, resolutionNote string) error {
+	_, err := q.conn.Exec(ctx, `
+		UPDATE reports SET status = 'resolved', resolved_by = $1, resolution_note = $2, updated_at = NOW()
+		WHERE id = $3
+	`, adminID, resolutionNote, reportID)
+	return err
+}
+
+func (q *Queries) LogAdminAccess(ctx context.Context, adminID string, action string, targetType string, targetID string) error {
+	_, err := q.conn.Exec(ctx, `
+		INSERT INTO admin_access_log (admin_id, action, target_type, target_id)
+		VALUES ($1, $2, $3, $4)
+	`, adminID, action, targetType, targetID)
 	return err
 }
 

@@ -8,6 +8,10 @@ const (
 	userIDKey ctxKey = iota
 )
 
+func WithUserID(ctx context.Context, value string) context.Context {
+	return context.WithValue(ctx, userIDKey, value)
+}
+
 func withUserID(ctx context.Context, value string) context.Context {
 	return context.WithValue(ctx, userIDKey, value)
 }

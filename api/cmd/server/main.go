@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"malkia-mentor/api/internal/admin"
 	"malkia-mentor/api/internal/auth"
 	"malkia-mentor/api/internal/config"
 	"malkia-mentor/api/internal/db"
@@ -59,6 +60,7 @@ func main() {
 	matchingService := matching.NewService(cfg)
 	sessionsService := sessions.NewService(queries, cfg)
 	goalsService := goals.NewService(queries, cfg)
+	adminService := admin.NewService(queries, cfg)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -122,6 +124,10 @@ func main() {
 			r.Route("/{id}", func(r chi.Router) {
 				r.Patch("/", authService.AuthMiddleware(goalsService.Update))
 			})
+		})
+
+		r.Route("/admin", func(r chi.Router) {
+			r.Mount("/", adminService.Routes())
 		})
 	})
 
