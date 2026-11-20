@@ -74,7 +74,7 @@
 - [x] Task 3 (issue 13): Design documentation + /design route
 - [x] Task 4 (issues 14-17): Frontend gaps
 - [x] Task 5 (issue 18): Admin dashboard with Recharts
-- [ ] Task 6 (issue 19): PWA with vite-plugin-pwa, offline support
+- [x] Task 6 (issue 19): PWA with vite-plugin-pwa, offline support
 - [ ] Task 7 (issue 20): Code of conduct, safeguarding policy, policy acceptance
 - [ ] Task 8 (issue 21): Data protection, /me/export, DELETE /me
 - [ ] Task 9 (issue 22): Testing (backend API tests, frontend component tests, Playwright smoke test)
