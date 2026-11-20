@@ -135,6 +135,20 @@ func main() {
 		r.Route("/policies", func(r chi.Router) {
 			r.Mount("/", policiesService.Routes())
 		})
+
+		r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("ok"))
+		})
+
+		r.Get("/readyz", func(w http.ResponseWriter, r *http.Request) {
+			if err := queries.Ping(r.Context()); err != nil {
+				http.Error(w, "database not ready", http.StatusServiceUnavailable)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("ok"))
+		})
 	})
 
 	srv := &http.Server{

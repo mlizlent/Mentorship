@@ -17,6 +17,10 @@ func New(conn *pgx.Conn) *Queries {
 	return &Queries{conn: conn}
 }
 
+func (q *Queries) Ping(ctx context.Context) error {
+	return q.conn.Ping(ctx)
+}
+
 func Open(databaseURL string, maxOpenConns int) (*pgx.Conn, error) {
 	conn, err := pgx.Connect(context.Background(), databaseURL)
 	if err != nil {

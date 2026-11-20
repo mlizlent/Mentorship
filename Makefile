@@ -1,4 +1,4 @@
-.PHONY: db-up db-down migrate seed run-api run-web test lint dev
+.PHONY: db-up db-down migrate seed run-api run-web test lint dev docker-build docker-up docker-down
 
 DB_URL ?= postgres://malkia:malkia@localhost:5432/malkia?sslmode=disable
 
@@ -31,3 +31,12 @@ lint:
 
 dev: db-up migrate seed
 	@make run-api & make run-web
+
+docker-build:
+	docker compose build
+
+docker-up:
+	docker compose up -d
+
+docker-down:
+	docker compose down

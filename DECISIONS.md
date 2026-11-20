@@ -78,7 +78,7 @@
 - [x] Task 7 (issue 20): Code of conduct, safeguarding policy, policy acceptance
 - [x] Task 8 (issue 21): Data protection, /me/export, DELETE /me
 - [x] Task 9 (issue 22): Testing (backend API tests, frontend component tests, Playwright smoke test)
-- [ ] Task 10 (issue 23): Deployment (Dockerfiles, healthz/readyz, CI deploy)
+- [x] Task 10 (issue 23): Deployment (Dockerfiles, healthz/readyz, CI deploy)
 - [ ] Task 11 (issue 24): Guardian consent flow (consent_events table, under-18 registration)
 - [ ] Task 12 (issue 25): Matching rules for under-18 (approved_for_minors on mentor_profiles)
 
