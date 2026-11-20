@@ -622,4 +622,12 @@ func (q *Queries) HasUserAcceptedPolicy(ctx context.Context, userID string, poli
 	return exists, err
 }
 
+func (q *Queries) SoftDeleteUser(ctx context.Context, id string) error {
+	_, err := q.conn.Exec(ctx, `
+		UPDATE users SET deleted_at = NOW(), status = 'deleted'
+		WHERE id = $1
+	`, id)
+	return err
+}
+
 var _ = fmt.Sprintf

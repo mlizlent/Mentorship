@@ -39,6 +39,8 @@ func NewService(queries *db.Queries, authSvc *auth.Service, cfg *config.Config) 
 			r.Delete("/{id}", s.RemoveBlock)
 		})
 		r.Post("/me/reports", s.CreateReport)
+		r.Get("/me/export", s.ExportMe)
+		r.Delete("/me", s.DeleteMe)
 		s.chiRouter = r
 	return s
 }
@@ -561,5 +563,79 @@ func (s *Service) CreateReport(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusCreated, map[string]interface{}{
 		"id":     id,
 		"status": "open",
+	})
+}
+
+type exportData struct {
+	User             interface{}   `json:"user"`
+	Mentorships      interface{}   `json:"mentorships"`
+	Reports          interface{}   `json:"reports"`
+	Blocks           interface{}   `json:"blocks"`
+	PolicyAcceptance interface{}   `json:"policy_acceptances"`
+}
+
+func (s *Service) ExportMe(w http.ResponseWriter, r *http.Request) {
+	userID, ok := auth.UserIDFromContext(r.Context())
+	if !ok {
+		httpx.WriteError(w, "unauthorized", "authentication required", nil)
+		return
+	}
+
+	user, err := s.queries.GetUserByID(r.Context(), userID)
+	if err != nil {
+		httpx.WriteError(w, "not_found", "user not found", nil)
+		return
+	}
+
+	mentorships, err := s.queries.ListMentorshipsByUser(r.Context(), userID, 100, "")
+	if err != nil {
+		mentorships = nil
+	}
+
+	blocks, err := s.queries.ListBlocks(r.Context(), userID, 100)
+	if err != nil {
+		blocks = nil
+	}
+
+	export := exportData{
+		User: map[string]interface{}{
+			"id":        user.ID,
+			"email":     user.Email,
+			"role":      user.Role,
+			"full_name": user.FullName,
+			"county":    user.County,
+			"language":  user.Language,
+			"status":    user.Status,
+		},
+		Mentorships: mentorships,
+		Reports:     nil,
+		Blocks:      blocks,
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"data": export,
+	})
+}
+
+func (s *Service) DeleteMe(w http.ResponseWriter, r *http.Request) {
+	userID, ok := auth.UserIDFromContext(r.Context())
+	if !ok {
+		httpx.WriteError(w, "unauthorized", "authentication required", nil)
+		return
+	}
+
+	_, err := s.queries.GetUserByID(r.Context(), userID)
+	if err != nil {
+		httpx.WriteError(w, "not_found", "user not found", nil)
+		return
+	}
+
+	if err := s.queries.SoftDeleteUser(r.Context(), userID); err != nil {
+		httpx.WriteError(w, "internal", "could not delete account", nil)
+		return
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"status": "deleted",
 	})
 }
