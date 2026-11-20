@@ -73,7 +73,7 @@
 - [x] Task 2 (issue 12): Reports and block API (user_blocks table)
 - [x] Task 3 (issue 13): Design documentation + /design route
 - [x] Task 4 (issues 14-17): Frontend gaps
-- [ ] Task 5 (issue 18): Admin dashboard with Recharts
+- [x] Task 5 (issue 18): Admin dashboard with Recharts
 - [ ] Task 6 (issue 19): PWA with vite-plugin-pwa, offline support
 - [ ] Task 7 (issue 20): Code of conduct, safeguarding policy, policy acceptance
 - [ ] Task 8 (issue 21): Data protection, /me/export, DELETE /me

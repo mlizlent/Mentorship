@@ -14,6 +14,7 @@ import MentorDetailPage from './pages/MentorDetailPage'
 import MentorshipsPage from './pages/MentorshipsPage'
 import ProfilePage from './pages/ProfilePage'
 import DesignPage from './pages/DesignPage'
+import AdminDashboard from './pages/AdminDashboard'
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
             <Route path="/mentorships" element={<MentorshipsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/design" element={<DesignPage />} />
+            <Route path="/admin" element={<AdminDashboard />} />
           </Route>
         </Routes>
       </BrowserRouter>
