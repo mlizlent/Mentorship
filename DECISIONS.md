@@ -69,8 +69,8 @@
 - [x] Frontend: API client with token refresh, TanStack Query, React Router
 
 ### Missing - to implement in issues 11-25
-- [ ] Task 1 (issue 11): Admin API (verify mentors, reports, metrics, CSV export)
-- [ ] Task 2 (issue 12): Reports and block API (user_blocks table)
+- [x] Task 1 (issue 11): Admin API (verify mentors, reports, metrics, CSV export)
+- [x] Task 2 (issue 12): Reports and block API (user_blocks table)
 - [ ] Task 3 (issue 13): Design documentation + /design route
 - [ ] Task 4 (issues 14-17): Frontend gaps (onboarding, mentor browse API wiring, sessions, goals, report/block actions)
 - [ ] Task 5 (issue 18): Admin dashboard with Recharts
@@ -83,7 +83,7 @@
 - [ ] Task 12 (issue 25): Matching rules for under-18 (approved_for_minors on mentor_profiles)
 
 ### New migrations needed
-- [ ] user_blocks (blocker_id, blocked_id)
+- [x] user_blocks (blocker_id, blocked_id)
 - [ ] policy_versions, policy_acceptances
 - [ ] consent_events (guardian_id, mentee_id, event, timestamp, ip_hash)
 - [ ] mentor_profiles.approved_for_minors, approved_by, approved_at (add columns)

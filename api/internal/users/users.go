@@ -31,9 +31,15 @@ func NewService(queries *db.Queries, authSvc *auth.Service, cfg *config.Config) 
 	r.Post("/login", s.Login)
 	r.Post("/refresh", s.Refresh)
 	r.Post("/logout", s.Logout)
-	r.Get("/me", s.GetMe)
-	r.Put("/me", s.UpdateMe)
-	s.chiRouter = r
+		r.Get("/me", s.GetMe)
+		r.Put("/me", s.UpdateMe)
+		r.Route("/me/blocks", func(r chi.Router) {
+			r.Get("/", s.ListBlocks)
+			r.Post("/", s.CreateBlock)
+			r.Delete("/{id}", s.RemoveBlock)
+		})
+		r.Post("/me/reports", s.CreateReport)
+		s.chiRouter = r
 	return s
 }
 
@@ -406,5 +412,144 @@ func (s *Service) UpdateMe(w http.ResponseWriter, r *http.Request) {
 			"language":  user.Language,
 			"status":    user.Status,
 		},
+	})
+}
+
+type blockRequest struct {
+	BlockedID string `json:"blocked_id" validate:"required,uuid"`
+}
+
+func (s *Service) ListBlocks(w http.ResponseWriter, r *http.Request) {
+	userID, ok := auth.UserIDFromContext(r.Context())
+	if !ok {
+		httpx.WriteError(w, "unauthorized", "authentication required", nil)
+		return
+	}
+
+	blocks, err := s.queries.ListBlocks(r.Context(), userID, 50)
+	if err != nil {
+		httpx.WriteError(w, "internal", "could not list blocks", nil)
+		return
+	}
+
+	type blockResponse struct {
+		BlockedID string    `json:"blocked_id"`
+		CreatedAt time.Time `json:"created_at"`
+	}
+	var result []blockResponse
+	for _, b := range blocks {
+		result = append(result, blockResponse{
+			BlockedID: b.BlockedID,
+			CreatedAt: b.CreatedAt,
+		})
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"data": result,
+	})
+}
+
+func (s *Service) CreateBlock(w http.ResponseWriter, r *http.Request) {
+	userID, ok := auth.UserIDFromContext(r.Context())
+	if !ok {
+		httpx.WriteError(w, "unauthorized", "authentication required", nil)
+		return
+	}
+
+	var req blockRequest
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		httpx.WriteError(w, "validation_failed", "invalid request body", nil)
+		return
+	}
+	if err := validate.Struct(&req); err != nil {
+		httpx.WriteError(w, "validation_failed", "validation failed", httpx.ValidationErrors(err))
+		return
+	}
+
+	if req.BlockedID == userID {
+		httpx.WriteError(w, "validation_failed", "cannot block yourself", nil)
+		return
+	}
+
+	if _, err := s.queries.GetUserByID(r.Context(), req.BlockedID); err != nil {
+		httpx.WriteError(w, "not_found", "user not found", nil)
+		return
+	}
+
+	if err := s.queries.CreateBlock(r.Context(), userID, req.BlockedID); err != nil {
+		httpx.WriteError(w, "internal", "could not block user", nil)
+		return
+	}
+
+	httpx.WriteJSON(w, http.StatusCreated, map[string]interface{}{
+		"status":  "blocked",
+		"blocked": req.BlockedID,
+	})
+}
+
+func (s *Service) RemoveBlock(w http.ResponseWriter, r *http.Request) {
+	userID, ok := auth.UserIDFromContext(r.Context())
+	if !ok {
+		httpx.WriteError(w, "unauthorized", "authentication required", nil)
+		return
+	}
+
+	blockedID := chi.URLParam(r, "id")
+	if blockedID == "" {
+		httpx.WriteError(w, "validation_failed", "blocked user id required", nil)
+		return
+	}
+
+	if err := s.queries.RemoveBlock(r.Context(), userID, blockedID); err != nil {
+		httpx.WriteError(w, "internal", "could not unblock user", nil)
+		return
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"status": "unblocked",
+	})
+}
+
+type createReportRequest struct {
+	TargetUserID string `json:"target_user_id" validate:"required,uuid"`
+	Reason       string `json:"reason" validate:"required,min=5,max=1000"`
+}
+
+func (s *Service) CreateReport(w http.ResponseWriter, r *http.Request) {
+	reporterID, ok := auth.UserIDFromContext(r.Context())
+	if !ok {
+		httpx.WriteError(w, "unauthorized", "authentication required", nil)
+		return
+	}
+
+	var req createReportRequest
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		httpx.WriteError(w, "validation_failed", "invalid request body", nil)
+		return
+	}
+	if err := validate.Struct(&req); err != nil {
+		httpx.WriteError(w, "validation_failed", "validation failed", httpx.ValidationErrors(err))
+		return
+	}
+
+	if req.TargetUserID == reporterID {
+		httpx.WriteError(w, "validation_failed", "cannot report yourself", nil)
+		return
+	}
+
+	if _, err := s.queries.GetUserByID(r.Context(), req.TargetUserID); err != nil {
+		httpx.WriteError(w, "not_found", "user not found", nil)
+		return
+	}
+
+	id, err := s.queries.CreateReport(r.Context(), reporterID, req.TargetUserID, req.Reason)
+	if err != nil {
+		httpx.WriteError(w, "internal", "could not create report", nil)
+		return
+	}
+
+	httpx.WriteJSON(w, http.StatusCreated, map[string]interface{}{
+		"id":     id,
+		"status": "open",
 	})
 }

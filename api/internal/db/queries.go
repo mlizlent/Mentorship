@@ -277,6 +277,90 @@ func (q *Queries) CreateReport(ctx context.Context, reporterID, targetUserID, re
 	return id, err
 }
 
+// Block queries
+
+type Block struct {
+	BlockerID string    `db:"blocker_id"`
+	BlockedID string    `db:"blocked_id"`
+	CreatedAt time.Time `db:"created_at"`
+}
+
+func (q *Queries) CreateBlock(ctx context.Context, blockerID, blockedID string) error {
+	_, err := q.conn.Exec(ctx, `
+		INSERT INTO user_blocks (blocker_id, blocked_id)
+		VALUES ($1, $2)
+		ON CONFLICT DO NOTHING
+	`, blockerID, blockedID)
+	return err
+}
+
+func (q *Queries) RemoveBlock(ctx context.Context, blockerID, blockedID string) error {
+	_, err := q.conn.Exec(ctx, `
+		DELETE FROM user_blocks
+		WHERE blocker_id = $1 AND blocked_id = $2
+	`, blockerID, blockedID)
+	return err
+}
+
+func (q *Queries) ListBlocks(ctx context.Context, blockerID string, limit int) ([]*Block, error) {
+	rows, err := q.conn.Query(ctx, `
+		SELECT blocker_id, blocked_id, created_at
+		FROM user_blocks
+		WHERE blocker_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2
+	`, blockerID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var blocks []*Block
+	for rows.Next() {
+		var b Block
+		if err := rows.Scan(&b.BlockerID, &b.BlockedID, &b.CreatedAt); err != nil {
+			return nil, err
+		}
+		blocks = append(blocks, &b)
+	}
+	return blocks, nil
+}
+
+func (q *Queries) ListBlockedBy(ctx context.Context, blockedID string, limit int) ([]*Block, error) {
+	rows, err := q.conn.Query(ctx, `
+		SELECT blocker_id, blocked_id, created_at
+		FROM user_blocks
+		WHERE blocked_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2
+	`, blockedID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var blocks []*Block
+	for rows.Next() {
+		var b Block
+		if err := rows.Scan(&b.BlockerID, &b.BlockedID, &b.CreatedAt); err != nil {
+			return nil, err
+		}
+		blocks = append(blocks, &b)
+	}
+	return blocks, nil
+}
+
+func (q *Queries) IsBlocked(ctx context.Context, blockerID, blockedID string) (bool, error) {
+	var exists bool
+	err := q.conn.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM user_blocks
+			WHERE blocker_id = $1 AND blocked_id = $2
+		)
+	`, blockerID, blockedID).Scan(&exists)
+	return exists, err
+}
+
 // Admin queries
 
 type AdminMentor struct {
