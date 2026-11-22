@@ -105,7 +105,6 @@ export default function ChatPage() {
     <div className="flex h-screen flex-col overflow-hidden">
       <header className="bg-primary-700 text-white px-4 py-3 shadow-sm flex items-center justify-between">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/messages')}>
-          <span className="text-xl font-bold text-primary-300">←</span>
           <div>
             <h3 className="font-semibold text-white">Conversation</h3>
             <p className="text-xs text-primary-300">Mentorship messaging</p>
