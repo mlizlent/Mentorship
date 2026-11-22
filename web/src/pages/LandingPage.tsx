@@ -1,7 +1,27 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { featuredMentors as mentors } from '@/data/featuredMentors'
+import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '@/services/api'
 import { InitialsAvatar } from '@/components/ui/initials-avatar'
+import { merolineProfile } from '@/data/featuredMentors'
+
+type Mentor = {
+  id?: string
+  full_name: string
+  bio?: string
+  county?: string
+  expertise?: string[]
+  photo?: string
+}
+
+const merolineMentor: Mentor = {
+  id: merolineProfile.id,
+  full_name: merolineProfile.name,
+  bio: merolineProfile.about,
+  county: merolineProfile.location,
+  expertise: merolineProfile.expertise,
+  photo: merolineProfile.photo,
+}
 
 const navLinks = [
   { label: 'Home', to: '#home' },
@@ -49,6 +69,31 @@ const steps = [
 
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false)
+
+  const { data: apiMentors = [] } = useQuery<Mentor[]>({
+    queryKey: ['landing-mentors'],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get<{ data: Mentor[] }>('/mentors')
+        return res.data?.data || []
+      } catch {
+        return []
+      }
+    },
+  })
+
+  const mentors = useMemo(
+    () =>
+      [
+        merolineMentor,
+        ...apiMentors.filter(
+          (m) =>
+            m.id !== merolineMentor.id &&
+            m.full_name.toLowerCase() !== merolineMentor.full_name.toLowerCase()
+        ),
+      ],
+    [apiMentors]
+  )
 
   return (
     <div className="min-h-screen bg-surface font-body-md text-on-surface antialiased">
@@ -104,9 +149,6 @@ export default function LandingPage() {
               onClick={() => setMenuOpen((v) => !v)}
               className="lg:hidden p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
             >
-              <span className="material-symbols-outlined">
-                {menuOpen ? 'close' : 'menu'}
-              </span>
             </button>
           </div>
         </div>
@@ -173,19 +215,13 @@ export default function LandingPage() {
                     to="/mentors"
                     className="inline-flex items-center justify-center font-label-md text-label-md text-on-primary bg-primary-container hover:bg-primary px-8 py-3.5 rounded-full shadow-lg shadow-primary/25 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    <span
-                      className="material-symbols-outlined mr-2 text-[20px]"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      workspace_premium
-                    </span>
                     Find a Mentor
                   </Link>
                   <Link
-                    to="/register?role=mentor"
+                    to="/register"
                     className="inline-flex items-center justify-center font-label-md text-label-md text-primary bg-surface-container-lowest/90 backdrop-blur hover:bg-surface-container-low px-8 py-3.5 rounded-full shadow-md shadow-primary/5 transition-all duration-200"
                   >
-                    Become a Mentor
+                    Join as a Mentee
                   </Link>
                 </div>
               </div>
@@ -221,16 +257,6 @@ export default function LandingPage() {
                         {step.number}
                       </span>
                       <div className={step.iconClass}>
-                        <span
-                          className="material-symbols-outlined text-[26px]"
-                          style={
-                            step.iconFilled
-                              ? { fontVariationSettings: "'FILL' 1" }
-                              : undefined
-                          }
-                        >
-                          {step.icon}
-                        </span>
                       </div>
                     </div>
                     <div>
@@ -242,9 +268,6 @@ export default function LandingPage() {
                       </p>
                     </div>
                     <div className="mt-8 pt-4 bg-surface-container-low p-3 rounded-xl flex items-center gap-2 text-primary font-label-sm text-label-sm font-semibold">
-                      <span className="material-symbols-outlined text-[18px]">
-                        {step.badgeIcon}
-                      </span>
                       {step.badge}
                     </div>
                   </div>
@@ -259,7 +282,7 @@ export default function LandingPage() {
               <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-12">
                 <div>
                   <span className="font-label-sm text-label-sm text-primary font-bold uppercase tracking-widest bg-surface-container-high px-4 py-1.5 rounded-full">
-                    Sovereign Directory
+                    Mentor Directory
                   </span>
                   <h2 className="font-headline-lg text-headline-lg text-on-surface mt-3">
                     Featured Mentors
@@ -275,41 +298,60 @@ export default function LandingPage() {
                     className="font-label-md text-label-md text-primary font-bold hover:underline flex items-center gap-1"
                   >
                     Explore All Mentors
-                    <span className="material-symbols-outlined text-[18px]">
-                      arrow_forward
-                    </span>
                   </Link>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {mentors.map((mentor) => (
-                  <div
-                    key={mentor.name}
-                    className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+              {mentors.length === 0 ? (
+                <div className="p-10 rounded-2xl bg-surface-container-lowest text-center border border-outline/30">
+                  <p className="text-sm text-on-surface-variant">
+                    Verified mentors will be featured here as they are onboarded by administrators.
+                  </p>
+                  <Link
+                    to="/mentors"
+                    className="mt-3 inline-block font-label-md text-label-md text-primary font-bold hover:underline"
                   >
-                    <div>
-                      <div className="flex items-start gap-4 mb-4">
-                        <InitialsAvatar
-                          initials={mentor.initials}
-                          accent={mentor.accent}
-                          className="w-16 h-16 rounded-2xl text-title-md"
-                        />
-                        <div className="flex-1">
-                          <h3 className="font-headline-sm text-title-md text-on-surface font-bold">
-                            {mentor.name}
-                          </h3>
-                          <p className="font-body-sm text-body-sm text-primary font-semibold leading-snug">
-                            {mentor.role}
-                          </p>
+                    Browse Directory →
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {mentors.slice(0, 6).map((mentor) => (
+                    <div
+                      key={mentor.id || mentor.full_name}
+                      className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+                    >
+                      <div>
+                        <div className="flex items-start gap-4 mb-4">
+                          {mentor.photo ? (
+                            <img
+                              src={mentor.photo}
+                              alt={`${mentor.full_name} portrait`}
+                              className="w-16 h-16 rounded-2xl object-cover border border-outline/40 shrink-0"
+                            />
+                          ) : (
+                            <InitialsAvatar
+                              initials={mentor.full_name.slice(0, 2).toUpperCase()}
+                              accent="bg-primary/10 text-primary"
+                              className="w-16 h-16 rounded-2xl text-title-md font-bold"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <h3 className="font-headline-sm text-title-md text-on-surface font-bold">
+                              {mentor.full_name}
+                            </h3>
+                            <p className="font-body-sm text-body-sm text-primary font-semibold leading-snug">
+                              {mentor.expertise?.join(' • ') || 'Technology Leader'}
+                            </p>
+                          </div>
                         </div>
+                        <p className="font-body-sm text-body-sm text-on-surface-variant mb-6 leading-normal">
+                          {mentor.bio || mentor.county || 'Verified Mentor'}
+                        </p>
                       </div>
-                      <p className="font-body-sm text-body-sm text-on-surface-variant mb-6 leading-normal">
-                        {mentor.detail}
-                      </p>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
 
@@ -320,12 +362,6 @@ export default function LandingPage() {
                 <div className="pointer-events-none absolute -right-20 -bottom-20 w-80 h-80 rounded-full bg-primary/10 blur-3xl" />
                 <div className="max-w-2xl">
                   <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-lowest text-primary font-label-sm text-label-sm font-bold shadow-sm mb-4">
-                    <span
-                      className="material-symbols-outlined text-[16px]"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      stars
-                    </span>
                     Next Cohort Matching Closes Soon
                   </div>
                   <h2 className="font-headline-xl text-headline-xl text-on-surface tracking-tight mb-4">
@@ -342,13 +378,13 @@ export default function LandingPage() {
                     to="/register"
                     className="inline-flex items-center justify-center font-label-md text-label-md text-on-primary bg-primary-container hover:bg-primary px-10 py-4 rounded-full shadow-lg shadow-primary/25 font-bold transition-all duration-200 hover:scale-[1.02] text-center"
                   >
-                    Create Free Account
+                    Create Mentee Account
                   </Link>
                   <Link
-                    to="/register?role=mentor"
+                    to="/mentors"
                     className="inline-flex items-center justify-center font-label-md text-label-md text-primary bg-surface-container-lowest hover:bg-surface px-8 py-3.5 rounded-full font-bold transition-all text-center"
                   >
-                    Schedule a Discovery Call
+                    Explore Mentors
                   </Link>
                 </div>
               </div>
@@ -378,7 +414,7 @@ export default function LandingPage() {
               © {new Date().getFullYear()} Malkia Labs. All rights reserved.
             </p>
             <p className="font-label-sm text-label-sm text-primary font-semibold">
-              Dignity • Growth • Sovereign Leadership
+              Dignity • Growth • Leadership
             </p>
           </div>
         </div>
