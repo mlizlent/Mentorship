@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -41,6 +42,25 @@ func main() {
 		Level: slog.Level(cfg.LogLevel),
 	}))
 	slog.SetDefault(logger)
+
+	// Handle database check flag
+	if len(os.Args) > 1 && os.Args[1] == "-check-db" {
+		pool, err := db.Open(cfg.DatabaseURL, cfg.MaxOpenConns)
+		if err != nil {
+			slog.Error("database not ready", "error", err)
+			os.Exit(1)
+		}
+		defer pool.Close()
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := pool.Ping(ctx); err != nil {
+			slog.Error("database not ready", "error", err)
+			os.Exit(1)
+		}
+		fmt.Println("database ready")
+		os.Exit(0)
+	}
 
 	pool, err := db.Open(cfg.DatabaseURL, cfg.MaxOpenConns)
 	if err != nil {
