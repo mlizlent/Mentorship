@@ -310,7 +310,7 @@ export default function LandingPage() {
                     to="/mentors"
                     className="mt-3 inline-block font-label-md text-label-md text-primary font-bold hover:underline"
                   >
-                    Browse Directory →
+                    Browse Directory
                   </Link>
                 </div>
               ) : (
