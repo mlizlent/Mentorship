@@ -17,7 +17,6 @@ const WORKSPACE_LINKS = [
   { label: 'Scheduled Sessions', path: '/sessions' },
   { label: 'Messages', path: '/messages' },
   { label: 'Profile', path: '/profile' },
-  { label: 'Admin Dashboard', path: '/admin' },
 ]
 
 const BOTTOM_NAV = [
@@ -183,21 +182,6 @@ export default function Layout() {
               )
             })}
           </nav>
-        </div>
-
-        <div className="p-3.5 rounded-2xl bg-surface-container-low border border-outline/30 flex flex-col gap-2">
-          <span className="font-label-sm text-label-sm text-primary font-bold uppercase tracking-wider">
-            Need Guidance?
-          </span>
-          <p className="font-body-sm text-body-sm text-on-surface-variant text-xs">
-            Reach out to verified senior leaders in your field.
-          </p>
-          <Link
-            to="/mentors"
-            className="text-xs font-bold text-primary hover:underline mt-1 inline-flex items-center gap-1"
-          >
-            Find a Mentor
-          </Link>
         </div>
       </aside>
 
