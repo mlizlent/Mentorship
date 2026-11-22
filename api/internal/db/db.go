@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -33,8 +34,10 @@ func Open(databaseURL string, maxOpenConns int) (*pgxpool.Pool, error) {
 }
 
 func Migrate(databaseURL string) error {
-	// Try multiple paths for migrations (local dev vs deployed)
+	// Try multiple paths for migrations (local dev vs deployed vs container)
 	paths := []string{
+		"file:///migrations",
+		"file://migrations",
 		"file://internal/db/migrations",
 		"file://./internal/db/migrations",
 		"file://api/internal/db/migrations",
@@ -42,16 +45,20 @@ func Migrate(databaseURL string) error {
 
 	var lastErr error
 	for _, path := range paths {
+		log.Printf("Trying migration path: %s", path)
 		m, err := migrate.New(path, databaseURL)
 		if err != nil {
 			lastErr = fmt.Errorf("create migrate instance (%s): %w", path, err)
+			log.Printf("Migration path failed: %v", lastErr)
 			continue
 		}
 
 		if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 			lastErr = fmt.Errorf("run migrations (%s): %w", path, err)
+			log.Printf("Migration run failed: %v", lastErr)
 			continue
 		}
+		log.Printf("Migrations applied successfully from: %s", path)
 		return nil
 	}
 	return lastErr
