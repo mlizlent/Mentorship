@@ -28,10 +28,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-50 px-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-sm p-6">
+    <div className="min-h-screen flex items-center justify-center bg-surface px-4">
+      <div className="max-w-md w-full bg-surface-container-low rounded-lg shadow-sm p-6">
         <h1 className="text-2xl font-bold text-ink mb-2">Welcome back</h1>
-        <p className="text-primary-600 text-sm font-medium mb-6">Crowning African tech.</p>
+        <p className="text-primary-500 text-sm font-medium mb-6">Crowning African tech.</p>
         {error && (
           <div className="mb-4 p-3 bg-danger/10 border border-danger/20 text-danger text-sm rounded">
             {error}
@@ -43,7 +43,7 @@ export default function LoginPage() {
             <input
               type="email"
               required
-              className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-primary-600"
+              className="w-full px-3 py-2 border border-outline-variant bg-surface-input text-ink rounded-md focus:ring-2 focus:ring-primary-600"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -53,7 +53,7 @@ export default function LoginPage() {
             <input
               type="password"
               required
-              className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:ring-2 focus:ring-primary-600"
+              className="w-full px-3 py-2 border border-outline-variant bg-surface-input text-ink rounded-md focus:ring-2 focus:ring-primary-600"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -62,9 +62,9 @@ export default function LoginPage() {
             Sign in
           </button>
         </form>
-        <p className="mt-6 text-center text-sm text-neutral-600">
+        <p className="mt-6 text-center text-sm text-on-surface-variant">
           Don't have an account?{' '}
-          <Link to="/register" className="text-primary-600 hover:text-primary-700 font-medium">
+          <Link to="/register" className="text-primary-400 hover:text-primary-300 font-medium">
             Sign up
           </Link>
         </p>

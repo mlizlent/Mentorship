@@ -114,6 +114,9 @@ export default function Layout() {
             <a href="/mentors" className="hover:text-primary-300 transition-colors">
               Find Mentors
             </a>
+            <a href="/dashboard" className="hover:text-primary-300 transition-colors">
+              Dashboard
+            </a>
             <a href="/profile" className="hover:text-primary-300 transition-colors">
               Profile
             </a>
@@ -125,7 +128,7 @@ export default function Layout() {
             </a>
             <button
               onClick={() => setDarkMode((prev) => !prev)}
-              className="hover:text-primary-300 transition-colors p-1 rounded hover:bg-white/10"
+              className="hover:text-primary-300 transition-colors p-1 rounded hover:bg-surface-container-low/30"
               title="Toggle dark mode"
             >
               {darkMode ? <SunIcon /> : <MoonIcon />}
@@ -151,7 +154,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="border-t border-neutral-200 bg-neutral-50 py-6 text-center text-xs text-neutral-500">
+      <footer className="border-t border-outline-variant bg-surface-container-low py-6 text-center text-xs text-on-surface-variant">
         Malkia Mentor &copy; {new Date().getFullYear()} - Crowning African tech.
       </footer>
     </div>

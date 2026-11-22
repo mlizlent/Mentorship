@@ -14,7 +14,7 @@ export const Avatar = React.forwardRef<HTMLImageElement, AvatarProps>(
       src={src}
       alt={alt ?? 'User avatar'}
       className={cn(
-        'h-10 w-10 rounded-full object-cover border border-neutral-300 bg-neutral-100',
+        'h-10 w-10 rounded-full object-cover border border-outline-variant bg-surface-container-low',
         className
       )}
       {...props}

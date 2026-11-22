@@ -64,12 +64,12 @@ export default function MentorsPage() {
           <input
             type="text"
             placeholder="Search by expertise, bio..."
-            className="px-3 py-2 border border-neutral-300 rounded-md w-full md:w-64"
+            className="px-3 py-2 border border-outline-variant rounded-md w-full md:w-64"
           />
-          <select className="px-3 py-2 border border-neutral-300 rounded-md">
+          <select className="px-3 py-2 border border-outline-variant rounded-md">
             <option>All counties</option>
           </select>
-          <select className="px-3 py-2 border border-neutral-300 rounded-md">
+          <select className="px-3 py-2 border border-outline-variant rounded-md">
             <option>All languages</option>
           </select>
         </div>

@@ -37,7 +37,7 @@ export const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(({ className, va
 Tabs.displayName = 'Tabs'
 
 export const TabsList = React.forwardRef<HTMLDivElement, TabsListProps>(({ className, children }, ref) => (
-  <div ref={ref} className={cn('inline-flex h-10 items-center justify-center rounded-lg bg-neutral-100 p-1', className)}>
+    <div ref={ref} className={cn('inline-flex h-10 items-center justify-center rounded-lg bg-surface-container-low p-1', className)}>
     {children}
   </div>
 ))
@@ -49,7 +49,7 @@ export const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>
     onClick={() => onValueChange(value)}
     className={cn(
       'rounded-md px-3 py-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600',
-      value === 'active' ? 'bg-white shadow-sm text-ink' : 'text-neutral-600 hover:text-neutral-900',
+      value === 'active' ? 'bg-surface-container-lowest shadow-sm text-ink' : 'text-on-surface-variant hover:text-on-surface',
       className
     )}
   >
