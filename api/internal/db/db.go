@@ -6,14 +6,14 @@ import (
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Queries struct {
-	conn *pgx.Conn
+	conn *pgxpool.Pool
 }
 
-func New(conn *pgx.Conn) *Queries {
+func New(conn *pgxpool.Pool) *Queries {
 	return &Queries{conn: conn}
 }
 
@@ -21,12 +21,15 @@ func (q *Queries) Ping(ctx context.Context) error {
 	return q.conn.Ping(ctx)
 }
 
-func Open(databaseURL string, maxOpenConns int) (*pgx.Conn, error) {
-	conn, err := pgx.Connect(context.Background(), databaseURL)
+func Open(databaseURL string, maxOpenConns int) (*pgxpool.Pool, error) {
+	cfg, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {
 		return nil, err
 	}
-	return conn, nil
+	if maxOpenConns > 0 {
+		cfg.MaxConns = int32(maxOpenConns)
+	}
+	return pgxpool.NewWithConfig(context.Background(), cfg)
 }
 
 func Migrate(databaseURL string) error {
