@@ -409,7 +409,7 @@ export default function DashboardPage() {
                 All mentors are verified tech professionals bound by our code of conduct.
               </p>
               <Link to="/profile" className="text-xs font-bold text-primary hover:underline inline-block mt-1">
-                View Code of Conduct &amp; Safety →
+                View Code of Conduct &amp; Safety
               </Link>
             </Card>
           </div>
