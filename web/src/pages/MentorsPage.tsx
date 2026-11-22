@@ -98,19 +98,25 @@ export default function MentorsPage() {
     if (!selectedMentor) return
     const mentorId = selectedMentor.id || selectedMentor.user_id || ''
 
+    if (mentorId === merolineProfile.id) {
+      toast.info(
+        'This is a featured profile preview. Pick a verified mentor from the directory to send a request.'
+      )
+      return
+    }
+
     try {
       await apiClient.post('/mentorships', {
         mentor_id: mentorId,
         request_message: requestNote,
       })
+      setSentRequests((prev) => ({ ...prev, [mentorId]: true }))
+      toast.success(`Mentorship request sent to ${selectedMentor.full_name}!`)
+      setSelectedMentor(null)
+      setRequestNote('')
     } catch {
-      // Gracefully record local sent state
+      toast.error('Could not send mentorship request. Please try again.')
     }
-
-    setSentRequests((prev) => ({ ...prev, [mentorId]: true }))
-    toast.success(`Mentorship request sent to ${selectedMentor.full_name}!`)
-    setSelectedMentor(null)
-    setRequestNote('')
   }
 
   if (isLoading) {
@@ -242,7 +248,7 @@ export default function MentorsPage() {
                     to={`/mentors/${mentorId}`}
                     className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline mb-4"
                   >
-                    View profile <span aria-hidden="true">→</span>
+                    View profile
                   </Link>
                 </div>
 
@@ -267,7 +273,7 @@ export default function MentorsPage() {
                         : 'bg-primary hover:bg-primary-700 text-white shadow-sm'
                     }`}
                   >
-                    {hasRequested ? '✓ Request Sent' : 'Request Mentorship'}
+                    {hasRequested ? 'Request Sent' : 'Request Mentorship'}
                   </Button>
                 </div>
               </Card>
