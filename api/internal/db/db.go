@@ -33,15 +33,28 @@ func Open(databaseURL string, maxOpenConns int) (*pgxpool.Pool, error) {
 }
 
 func Migrate(databaseURL string) error {
-	m, err := migrate.New("file://internal/db/migrations", databaseURL)
-	if err != nil {
-		return fmt.Errorf("create migrate instance: %w", err)
+	// Try multiple paths for migrations (local dev vs deployed)
+	paths := []string{
+		"file://internal/db/migrations",
+		"file://./internal/db/migrations",
+		"file://api/internal/db/migrations",
 	}
 
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		return fmt.Errorf("run migrations: %w", err)
+	var lastErr error
+	for _, path := range paths {
+		m, err := migrate.New(path, databaseURL)
+		if err != nil {
+			lastErr = fmt.Errorf("create migrate instance (%s): %w", path, err)
+			continue
+		}
+
+		if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+			lastErr = fmt.Errorf("run migrations (%s): %w", path, err)
+			continue
+		}
+		return nil
 	}
-	return nil
+	return lastErr
 }
 
 func Seed(databaseURL string) error {
