@@ -1,9 +1,11 @@
 import { Link, useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { toast } from 'react-toastify'
 import { apiClient } from '@/services/api'
 import { merolineProfile } from '@/data/featuredMentors'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 type Mentor = {
   id?: string
@@ -52,7 +54,7 @@ function MerolineProfile() {
         to="/mentors"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
       >
-        <span aria-hidden="true">←</span> Back to mentors
+        Back to mentors
       </Link>
 
       <Card className="overflow-hidden rounded-3xl bg-surface-container-lowest border border-outline/40 shadow-sm">
@@ -129,12 +131,6 @@ function MerolineProfile() {
             <ul className="space-y-2.5">
               {profile.helpTopics?.map((topic) => (
                 <li key={topic} className="flex items-start gap-2.5">
-                  <span
-                    aria-hidden="true"
-                    className="mt-0.5 w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-bold shrink-0"
-                  >
-                    ✓
-                  </span>
                   <span className="font-body-sm text-body-sm text-on-surface leading-relaxed">
                     {topic}
                   </span>
@@ -233,13 +229,25 @@ function MerolineProfile() {
 }
 
 function MentorProfileFallback({ mentor }: { mentor: Mentor }) {
+  const requestMentorship = useMutation({
+    mutationFn: async () => {
+      await apiClient.post('/mentorships', {
+        mentor_id: mentor.id,
+        request_message: '',
+      })
+    },
+    onSuccess: () =>
+      toast.success(`Mentorship request sent to ${mentor.full_name}!`),
+    onError: () => toast.error('Could not send mentorship request'),
+  })
+
   return (
     <div className="space-y-6">
       <Link
         to="/mentors"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
       >
-        <span aria-hidden="true">←</span> Back to mentors
+        Back to mentors
       </Link>
 
       <Card className="p-6 sm:p-8 rounded-3xl bg-surface-container-lowest border border-outline/40 shadow-sm">
@@ -272,6 +280,21 @@ function MentorProfileFallback({ mentor }: { mentor: Mentor }) {
               </div>
             )}
           </div>
+        </div>
+
+        <div className="mt-6 pt-5 border-t border-outline/30 flex flex-wrap gap-3">
+          <Button
+            onClick={() => requestMentorship.mutate()}
+            disabled={requestMentorship.isPending || !mentor.verified}
+          >
+            {requestMentorship.isPending ? 'Sending...' : 'Request Mentorship'}
+          </Button>
+          <Link
+            to="/mentors"
+            className="inline-flex items-center justify-center px-5 py-2.5 rounded-full bg-surface-container-low hover:bg-surface-container-high text-ink font-label-md text-label-md transition-all"
+          >
+            All Mentors
+          </Link>
         </div>
       </Card>
 
@@ -356,7 +379,7 @@ export default function MentorDetailPage() {
           to="/mentors"
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
         >
-          <span aria-hidden="true">←</span> Back to mentors
+          Back to mentors
         </Link>
         <Card className="p-10 rounded-2xl bg-surface-container-lowest border border-outline/40 text-center">
           <h2 className="font-headline-sm text-headline-sm text-ink font-bold">Mentor not found</h2>
