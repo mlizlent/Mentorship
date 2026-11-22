@@ -177,6 +177,19 @@ func (q *Queries) UpdateMentorshipStatus(ctx context.Context, id, status string)
 	return err
 }
 
+func (q *Queries) GetMentorship(ctx context.Context, id string) (*Mentorship, error) {
+	var m Mentorship
+	err := q.conn.QueryRow(ctx, `
+		SELECT id, mentor_id, mentee_id, status, request_message, start_date, end_date, created_at, updated_at
+		FROM mentorships
+		WHERE id = $1 AND deleted_at IS NULL
+	`, id).Scan(&m.ID, &m.MentorID, &m.MenteeID, &m.Status, &m.RequestMessage, &m.StartDate, &m.EndDate, &m.CreatedAt, &m.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &m, nil
+}
+
 func (q *Queries) ListMentorshipsByUser(ctx context.Context, userID string, limit int, cursor string) ([]*Mentorship, error) {
 	rows, err := q.conn.Query(ctx, `
 		SELECT id, mentor_id, mentee_id, status, request_message, start_date, end_date, created_at, updated_at
@@ -230,6 +243,25 @@ func (q *Queries) ListSessionsByMentorship(ctx context.Context, mentorshipID str
 	return sessions, nil
 }
 
+func (q *Queries) UpdateSessionStatus(ctx context.Context, id, status string) error {
+	_, err := q.conn.Exec(ctx, `
+		UPDATE sessions SET status = $1, updated_at = NOW() WHERE id = $2
+	`, status, id)
+	return err
+}
+
+func (q *Queries) GetSession(ctx context.Context, id string) (*Session, error) {
+	var s Session
+	err := q.conn.QueryRow(ctx, `
+		SELECT id, mentorship_id, scheduled_at, duration_min, meeting_link, status, mentor_notes, mentee_notes, mentee_rating, mentor_rating, created_at, updated_at
+		FROM sessions WHERE id = $1
+	`, id).Scan(&s.ID, &s.MentorshipID, &s.ScheduledAt, &s.DurationMin, &s.MeetingLink, &s.Status, &s.MentorNotes, &s.MenteeNotes, &s.MenteeRating, &s.MentorRating, &s.CreatedAt, &s.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
+
 func (q *Queries) CreateGoal(ctx context.Context, mentorshipID, title string, targetDate *string) (string, error) {
 	var id string
 	err := q.conn.QueryRow(ctx, `
@@ -258,6 +290,25 @@ func (q *Queries) ListGoalsByMentorship(ctx context.Context, mentorshipID string
 		goals = append(goals, &g)
 	}
 	return goals, nil
+}
+
+func (q *Queries) UpdateGoalStatus(ctx context.Context, id, status string) error {
+	_, err := q.conn.Exec(ctx, `
+		UPDATE goals SET status = $1, updated_at = NOW() WHERE id = $2
+	`, status, id)
+	return err
+}
+
+func (q *Queries) GetGoal(ctx context.Context, id string) (*Goal, error) {
+	var g Goal
+	err := q.conn.QueryRow(ctx, `
+		SELECT id, mentorship_id, title, target_date, status, created_at, updated_at
+		FROM goals WHERE id = $1
+	`, id).Scan(&g.ID, &g.MentorshipID, &g.Title, &g.TargetDate, &g.Status, &g.CreatedAt, &g.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &g, nil
 }
 
 func (q *Queries) InsertNotification(ctx context.Context, userID, ntype, payload, sendAt string) error {
