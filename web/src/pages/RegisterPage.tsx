@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -13,10 +13,7 @@ export default function RegisterPage() {
     code_of_conduct_accepted: false,
   })
   const [error, setError] = useState('')
-  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-
-  if (searchParams.get('role') === 'mentor') formData.role = 'mentor'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,8 +39,8 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface px-4">
       <div className="max-w-md w-full bg-surface-container-low rounded-lg shadow-sm p-6">
-        <h1 className="text-2xl font-bold text-ink mb-2">Create account</h1>
-        <p className="text-primary-500 text-sm font-medium mb-6">Crowning African tech.</p>
+        <h1 className="text-2xl font-bold text-ink mb-2">Create Mentee Account</h1>
+        <p className="text-primary-500 text-sm font-medium mb-6">Join Malkia to connect with leading tech mentors.</p>
         {error && (
           <div className="mb-4 p-3 bg-danger/10 border border-danger/20 text-danger text-sm rounded">
             {error}
@@ -65,13 +62,6 @@ export default function RegisterPage() {
           <div>
             <label className="block text-sm font-medium text-ink mb-1">Date of birth</label>
             <input type="date" required className="w-full px-3 py-2 border border-outline-variant bg-surface-input text-ink rounded-md focus:ring-2 focus:ring-primary-600" value={formData.date_of_birth} onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1">Role</label>
-            <select className="w-full px-3 py-2 border border-outline-variant bg-surface-input text-ink rounded-md focus:ring-2 focus:ring-primary-600" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })}>
-              <option value="mentee">Mentee</option>
-              <option value="mentor">Mentor</option>
-            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-ink mb-1">County</label>
