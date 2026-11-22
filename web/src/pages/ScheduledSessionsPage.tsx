@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'react-toastify'
 import { apiClient } from '@/services/api'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -78,6 +79,47 @@ export default function ScheduledSessionsPage() {
   })
 
   const sessions = sessionsRaw?.data || []
+
+  const queryClient = useQueryClient()
+  const [showSchedule, setShowSchedule] = useState(false)
+  const [scheduledAt, setScheduledAt] = useState('')
+  const [duration, setDuration] = useState('30')
+  const [meetingLink, setMeetingLink] = useState('')
+
+  const createSession = useMutation({
+    mutationFn: async () => {
+      if (!activeMentorshipId) throw new Error('No active mentorship')
+      await apiClient.post(`/mentorships/${activeMentorshipId}/sessions`, {
+        scheduled_at: new Date(scheduledAt).toISOString(),
+        duration_min: Number(duration),
+        meeting_link: meetingLink.trim(),
+      })
+    },
+    onSuccess: () => {
+      toast.success('Session scheduled')
+      setScheduledAt('')
+      setDuration('30')
+      setMeetingLink('')
+      setShowSchedule(false)
+      void queryClient.invalidateQueries({
+        queryKey: ['mentorship-sessions', activeMentorshipId],
+      })
+    },
+    onError: () => toast.error('Could not schedule session'),
+  })
+
+  const updateSession = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      await apiClient.patch(`/sessions/${id}`, { status })
+    },
+    onSuccess: () => {
+      toast.success('Session updated')
+      void queryClient.invalidateQueries({
+        queryKey: ['mentorship-sessions', activeMentorshipId],
+      })
+    },
+    onError: () => toast.error('Could not update session'),
+  })
 
   const nextSession = sessions[0]
   const activeMentor = activeMentorship
@@ -159,6 +201,8 @@ export default function ScheduledSessionsPage() {
           ) : (
             <div className="space-y-4">
               {sessions.map((s, idx) => {
+                const sessionId = s.id || s.ID
+                const status = s.status || s.Status || 'scheduled'
                 const dateStr = s.scheduled_at || s.ScheduledAt
                 const dateObj = dateStr ? new Date(dateStr) : null
                 const isValidDate = dateObj && !isNaN(dateObj.getTime())
@@ -183,7 +227,7 @@ export default function ScheduledSessionsPage() {
                         <div className="flex items-center gap-2">
                           <h3 className="font-bold text-ink text-base">1:1 Mentorship Session</h3>
                           <Badge variant="outline" className="capitalize text-xs font-bold">
-                            {s.status || s.Status || 'Scheduled'}
+                            {status}
                           </Badge>
                         </div>
                         <p className="text-xs text-on-surface-variant mt-0.5">
@@ -204,6 +248,20 @@ export default function ScheduledSessionsPage() {
                       >
                         Message Mentor
                       </Link>
+                      {sessionId &&
+                        status !== 'cancelled' &&
+                        status !== 'completed' && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateSession.mutate({ id: sessionId, status: 'cancelled' })
+                            }
+                            disabled={updateSession.isPending}
+                            className="px-4 py-2 rounded-full border border-red-200 text-xs font-bold text-red-600 hover:bg-red-50 transition-colors disabled:opacity-60"
+                          >
+                            Cancel
+                          </button>
+                        )}
                     </div>
                   </Card>
                 )
@@ -255,6 +313,77 @@ export default function ScheduledSessionsPage() {
               </div>
             )}
           </Card>
+
+          {activeMentorshipId && (
+            <Card className="p-6 rounded-3xl bg-surface-container-lowest border border-outline/30 shadow-sm space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-base font-bold text-ink">Schedule Session</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowSchedule((v) => !v)}
+                  className="text-xs font-bold text-primary hover:underline"
+                >
+                  {showSchedule ? 'Close' : 'New session'}
+                </button>
+              </div>
+
+              {showSchedule ? (
+                <form
+                  className="space-y-3"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    createSession.mutate()
+                  }}
+                >
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">
+                      Date &amp; time
+                    </label>
+                    <input
+                      type="datetime-local"
+                      required
+                      value={scheduledAt}
+                      onChange={(e) => setScheduledAt(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-outline/40 bg-surface-container-lowest text-sm text-ink"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">
+                      Duration (minutes)
+                    </label>
+                    <input
+                      type="number"
+                      min={5}
+                      max={480}
+                      required
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-outline/40 bg-surface-container-lowest text-sm text-ink"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">
+                      Meeting link
+                    </label>
+                    <input
+                      type="url"
+                      value={meetingLink}
+                      onChange={(e) => setMeetingLink(e.target.value)}
+                      placeholder="https://meet.google.com/..."
+                      className="w-full px-3 py-2 rounded-xl border border-outline/40 bg-surface-container-lowest text-sm text-ink"
+                    />
+                  </div>
+                  <Button type="submit" disabled={createSession.isPending} className="w-full">
+                    {createSession.isPending ? 'Scheduling...' : 'Schedule Session'}
+                  </Button>
+                </form>
+              ) : (
+                <p className="text-xs text-on-surface-variant leading-relaxed">
+                  Set up a 1:1 session with your mentor. Times are in East Africa Time (EAT).
+                </p>
+              )}
+            </Card>
+          )}
 
           <Card className="p-6 rounded-3xl bg-surface-container-low border border-outline/30 shadow-sm space-y-3">
             <span className="text-xs font-bold text-primary uppercase tracking-wider">
