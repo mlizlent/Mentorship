@@ -76,9 +76,7 @@ func (s *Service) ListMentors(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Log admin access to personal data
-	if err := s.queries.LogAdminAccess(r.Context(), userID, "list_mentors", "user", ""); err != nil {
-		// Don't fail the request if logging fails
-	}
+	_ = s.queries.LogAdminAccess(r.Context(), userID, "list_mentors", "user", "")
 
 	type adminMentorResponse struct {
 		UserID          string     `json:"user_id"`
@@ -149,16 +147,12 @@ func (s *Service) VerifyMentor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Log admin access
-	if err := s.queries.LogAdminAccess(r.Context(), adminID, "verify_mentor", "user", mentorID); err != nil {
-		// Don't fail
-	}
+	_ = s.queries.LogAdminAccess(r.Context(), adminID, "verify_mentor", "user", mentorID)
 
 	// Queue verification email
 	if req.Verified {
 		payload := `{"type":"mentor_verified","mentor_id":"` + mentorID + `"}`
-		if err := s.queries.InsertNotification(r.Context(), mentorID, "mentor_verified", payload, time.Now().UTC().Format(time.RFC3339)); err != nil {
-			// Don't fail
-		}
+		_ = s.queries.InsertNotification(r.Context(), mentorID, "mentor_verified", payload, time.Now().UTC().Format(time.RFC3339))
 	}
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
@@ -184,21 +178,19 @@ func (s *Service) ListReports(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Log admin access to personal data
-	if err := s.queries.LogAdminAccess(r.Context(), adminID, "list_reports", "report", ""); err != nil {
-		// Don't fail
-	}
+	_ = s.queries.LogAdminAccess(r.Context(), adminID, "list_reports", "report", "")
 
 	type reportResponse struct {
-		ID            string     `json:"id"`
-		ReporterID    string     `json:"reporter_id"`
-		TargetUserID  string     `json:"target_user_id"`
-		Reason        string     `json:"reason"`
-		Status        string     `json:"status"`
-		ResolvedBy    *string    `json:"resolved_by,omitempty"`
+		ID             string    `json:"id"`
+		ReporterID     string    `json:"reporter_id"`
+		TargetUserID   string    `json:"target_user_id"`
+		Reason         string    `json:"reason"`
+		Status         string    `json:"status"`
+		ResolvedBy     *string   `json:"resolved_by,omitempty"`
 		ResolutionNote string    `json:"resolution_note,omitempty"`
-		CreatedAt     time.Time  `json:"created_at"`
-		UpdatedAt     time.Time  `json:"updated_at"`
-		Overdue       bool       `json:"overdue"`
+		CreatedAt      time.Time `json:"created_at"`
+		UpdatedAt      time.Time `json:"updated_at"`
+		Overdue        bool      `json:"overdue"`
 	}
 
 	var result []reportResponse
@@ -206,16 +198,16 @@ func (s *Service) ListReports(w http.ResponseWriter, r *http.Request) {
 	for _, rep := range reports {
 		overdue := rep.Status == "open" && now.Sub(rep.CreatedAt) > 24*time.Hour
 		result = append(result, reportResponse{
-			ID:            rep.ID,
-			ReporterID:    rep.ReporterID,
-			TargetUserID:  rep.TargetUserID,
-			Reason:        rep.Reason,
-			Status:        rep.Status,
-			ResolvedBy:    rep.ResolvedBy,
+			ID:             rep.ID,
+			ReporterID:     rep.ReporterID,
+			TargetUserID:   rep.TargetUserID,
+			Reason:         rep.Reason,
+			Status:         rep.Status,
+			ResolvedBy:     rep.ResolvedBy,
 			ResolutionNote: rep.ResolutionNote,
-			CreatedAt:     rep.CreatedAt,
-			UpdatedAt:     rep.UpdatedAt,
-			Overdue:       overdue,
+			CreatedAt:      rep.CreatedAt,
+			UpdatedAt:      rep.UpdatedAt,
+			Overdue:        overdue,
 		})
 	}
 
@@ -243,9 +235,7 @@ func (s *Service) ResolveReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.queries.LogAdminAccess(r.Context(), adminID, "resolve_report", "report", reportID); err != nil {
-		// Don't fail
-	}
+	_ = s.queries.LogAdminAccess(r.Context(), adminID, "resolve_report", "report", reportID)
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"status": "resolved",
@@ -263,9 +253,9 @@ type MetricsResponse struct {
 }
 
 type ReachMetrics struct {
-	TotalMentees   int               `json:"total_mentees"`
-	TotalMentors   int               `json:"total_mentors"`
-	ByCounty       map[string]int    `json:"by_county"`
+	TotalMentees int            `json:"total_mentees"`
+	TotalMentors int            `json:"total_mentors"`
+	ByCounty     map[string]int `json:"by_county"`
 }
 
 type MatchingMetrics struct {
@@ -282,14 +272,14 @@ type EngagementMetrics struct {
 }
 
 type OutcomesMetrics struct {
-	GoalsCompleted      int     `json:"goals_completed"`
+	GoalsCompleted       int     `json:"goals_completed"`
 	AverageSessionRating float64 `json:"average_session_rating"`
 }
 
 type SafetyMetrics struct {
-	OpenReports             int     `json:"open_reports"`
-	MedianTimeToResolve     float64 `json:"median_time_to_resolve_hours"`
-	MentorsAwaitingVerification int   `json:"mentors_awaiting_verification"`
+	OpenReports                 int     `json:"open_reports"`
+	MedianTimeToResolve         float64 `json:"median_time_to_resolve_hours"`
+	MentorsAwaitingVerification int     `json:"mentors_awaiting_verification"`
 }
 
 func (s *Service) GetMetrics(w http.ResponseWriter, r *http.Request) {
@@ -327,16 +317,14 @@ func (s *Service) GetMetrics(w http.ResponseWriter, r *http.Request) {
 			AverageSessionRating: 4.2,
 		},
 		Safety: SafetyMetrics{
-			OpenReports:                  5,
-			MedianTimeToResolve:          18.5,
-			MentorsAwaitingVerification:  2,
+			OpenReports:                 5,
+			MedianTimeToResolve:         18.5,
+			MentorsAwaitingVerification: 2,
 		},
 	}
 
 	// Log admin access (aggregated, no personal data)
-	if err := s.queries.LogAdminAccess(r.Context(), adminID, "read_metrics", "metrics", ""); err != nil {
-		// Don't fail
-	}
+	_ = s.queries.LogAdminAccess(r.Context(), adminID, "read_metrics", "metrics", "")
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"data": metrics,
@@ -358,14 +346,14 @@ func (s *Service) ExportMetricsCSV(w http.ResponseWriter, r *http.Request) {
 	writer := csv.NewWriter(w)
 	defer writer.Flush()
 
-	writer.Write([]string{"category", "metric", "value"})
-	writer.Write([]string{"reach", "total_mentees", "10"})
-	writer.Write([]string{"reach", "total_mentors", "8"})
-	writer.Write([]string{"matching", "requests_received", "25"})
-	writer.Write([]string{"matching", "match_rate", "0.60"})
-	writer.Write([]string{"engagement", "active_mentorships", "15"})
-	writer.Write([]string{"outcomes", "goals_completed", "42"})
-	writer.Write([]string{"safety", "open_reports", "5"})
+	_ = writer.Write([]string{"category", "metric", "value"})
+	_ = writer.Write([]string{"reach", "total_mentees", "10"})
+	_ = writer.Write([]string{"reach", "total_mentors", "8"})
+	_ = writer.Write([]string{"matching", "requests_received", "25"})
+	_ = writer.Write([]string{"matching", "match_rate", "0.60"})
+	_ = writer.Write([]string{"engagement", "active_mentorships", "15"})
+	_ = writer.Write([]string{"outcomes", "goals_completed", "42"})
+	_ = writer.Write([]string{"safety", "open_reports", "5"})
 }
 
 var _ = strings.TrimSpace

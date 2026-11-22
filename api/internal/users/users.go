@@ -2,6 +2,7 @@ package users
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -31,22 +32,43 @@ func NewService(queries *db.Queries, authSvc *auth.Service, cfg *config.Config) 
 	r.Post("/login", s.Login)
 	r.Post("/refresh", s.Refresh)
 	r.Post("/logout", s.Logout)
-		r.Get("/me", s.GetMe)
-		r.Put("/me", s.UpdateMe)
-		r.Route("/me/blocks", func(r chi.Router) {
-			r.Get("/", s.ListBlocks)
-			r.Post("/", s.CreateBlock)
-			r.Delete("/{id}", s.RemoveBlock)
-		})
-		r.Post("/me/reports", s.CreateReport)
-		r.Get("/me/export", s.ExportMe)
-		r.Delete("/me", s.DeleteMe)
-		s.chiRouter = r
+	r.Get("/me", s.GetMe)
+	r.Put("/me", s.UpdateMe)
+	r.Route("/me/blocks", func(r chi.Router) {
+		r.Get("/", s.ListBlocks)
+		r.Post("/", s.CreateBlock)
+		r.Delete("/{id}", s.RemoveBlock)
+	})
+	r.Post("/me/reports", s.CreateReport)
+	r.Get("/me/export", s.ExportMe)
+	r.Delete("/me", s.DeleteMe)
+	s.chiRouter = r
 	return s
 }
 
 func (s *Service) Routes() *chi.Mux {
 	return s.chiRouter
+}
+
+func (s *Service) userIDFromRequest(r *http.Request) (string, bool) {
+	tokenStr := ""
+	if cookie, err := r.Cookie("access_token"); err == nil {
+		tokenStr = cookie.Value
+	}
+	if tokenStr == "" {
+		if header := r.Header.Get("Authorization"); strings.HasPrefix(header, "Bearer ") {
+			tokenStr = strings.TrimPrefix(header, "Bearer ")
+		}
+	}
+	if tokenStr == "" {
+		return "", false
+	}
+
+	userID, err := s.authSvc.SubjectFromToken(tokenStr)
+	if err != nil {
+		return "", false
+	}
+	return userID, true
 }
 
 type registerRequest struct {
@@ -154,7 +176,7 @@ func (s *Service) Register(w http.ResponseWriter, r *http.Request) {
 		Secure:   s.cfg.Environment == "production",
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
-		MaxAge:   int(s.cfg.AccessTokenTTL.Seconds()),
+		MaxAge:   int(s.cfg.RefreshTokenTTL.Seconds()),
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
@@ -227,7 +249,7 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
 		Secure:   s.cfg.Environment == "production",
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
-		MaxAge:   int(s.cfg.AccessTokenTTL.Seconds()),
+		MaxAge:   int(s.cfg.RefreshTokenTTL.Seconds()),
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
@@ -249,10 +271,6 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-type refreshRequest struct {
-	RefreshToken string `json:"refresh_token"`
-}
-
 func (s *Service) Refresh(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil {
@@ -260,9 +278,9 @@ func (s *Service) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := auth.UserIDFromContext(r.Context())
+	userID, ok := s.userIDFromRequest(r)
 	if !ok {
-		httpx.WriteError(w, "unauthorized", "user not found", nil)
+		httpx.WriteError(w, "unauthorized", "authentication required", nil)
 		return
 	}
 
@@ -318,7 +336,7 @@ func (s *Service) Refresh(w http.ResponseWriter, r *http.Request) {
 		Secure:   s.cfg.Environment == "production",
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
-		MaxAge:   int(s.cfg.AccessTokenTTL.Seconds()),
+		MaxAge:   int(s.cfg.RefreshTokenTTL.Seconds()),
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
@@ -343,7 +361,7 @@ func (s *Service) Refresh(w http.ResponseWriter, r *http.Request) {
 func (s *Service) Logout(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("refresh_token")
 	if err == nil {
-		userID, ok := auth.UserIDFromContext(r.Context())
+		userID, ok := s.userIDFromRequest(r)
 		if ok {
 			id, tokenHash, _, err := s.queries.GetRefreshTokenByUser(r.Context(), userID)
 			if err == nil {
@@ -589,11 +607,11 @@ func (s *Service) CreateReport(w http.ResponseWriter, r *http.Request) {
 }
 
 type exportData struct {
-	User             interface{}   `json:"user"`
-	Mentorships      interface{}   `json:"mentorships"`
-	Reports          interface{}   `json:"reports"`
-	Blocks           interface{}   `json:"blocks"`
-	PolicyAcceptance interface{}   `json:"policy_acceptances"`
+	User             interface{} `json:"user"`
+	Mentorships      interface{} `json:"mentorships"`
+	Reports          interface{} `json:"reports"`
+	Blocks           interface{} `json:"blocks"`
+	PolicyAcceptance interface{} `json:"policy_acceptances"`
 }
 
 func (s *Service) ExportMe(w http.ResponseWriter, r *http.Request) {

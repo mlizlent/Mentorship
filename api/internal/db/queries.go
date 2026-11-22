@@ -177,6 +177,19 @@ func (q *Queries) UpdateMentorshipStatus(ctx context.Context, id, status string)
 	return err
 }
 
+func (q *Queries) GetMentorship(ctx context.Context, id string) (*Mentorship, error) {
+	var m Mentorship
+	err := q.conn.QueryRow(ctx, `
+		SELECT id, mentor_id, mentee_id, status, request_message, start_date, end_date, created_at, updated_at
+		FROM mentorships
+		WHERE id = $1 AND deleted_at IS NULL
+	`, id).Scan(&m.ID, &m.MentorID, &m.MenteeID, &m.Status, &m.RequestMessage, &m.StartDate, &m.EndDate, &m.CreatedAt, &m.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &m, nil
+}
+
 func (q *Queries) ListMentorshipsByUser(ctx context.Context, userID string, limit int, cursor string) ([]*Mentorship, error) {
 	rows, err := q.conn.Query(ctx, `
 		SELECT id, mentor_id, mentee_id, status, request_message, start_date, end_date, created_at, updated_at
@@ -230,6 +243,25 @@ func (q *Queries) ListSessionsByMentorship(ctx context.Context, mentorshipID str
 	return sessions, nil
 }
 
+func (q *Queries) UpdateSessionStatus(ctx context.Context, id, status string) error {
+	_, err := q.conn.Exec(ctx, `
+		UPDATE sessions SET status = $1, updated_at = NOW() WHERE id = $2
+	`, status, id)
+	return err
+}
+
+func (q *Queries) GetSession(ctx context.Context, id string) (*Session, error) {
+	var s Session
+	err := q.conn.QueryRow(ctx, `
+		SELECT id, mentorship_id, scheduled_at, duration_min, meeting_link, status, mentor_notes, mentee_notes, mentee_rating, mentor_rating, created_at, updated_at
+		FROM sessions WHERE id = $1
+	`, id).Scan(&s.ID, &s.MentorshipID, &s.ScheduledAt, &s.DurationMin, &s.MeetingLink, &s.Status, &s.MentorNotes, &s.MenteeNotes, &s.MenteeRating, &s.MentorRating, &s.CreatedAt, &s.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
+
 func (q *Queries) CreateGoal(ctx context.Context, mentorshipID, title string, targetDate *string) (string, error) {
 	var id string
 	err := q.conn.QueryRow(ctx, `
@@ -258,6 +290,25 @@ func (q *Queries) ListGoalsByMentorship(ctx context.Context, mentorshipID string
 		goals = append(goals, &g)
 	}
 	return goals, nil
+}
+
+func (q *Queries) UpdateGoalStatus(ctx context.Context, id, status string) error {
+	_, err := q.conn.Exec(ctx, `
+		UPDATE goals SET status = $1, updated_at = NOW() WHERE id = $2
+	`, status, id)
+	return err
+}
+
+func (q *Queries) GetGoal(ctx context.Context, id string) (*Goal, error) {
+	var g Goal
+	err := q.conn.QueryRow(ctx, `
+		SELECT id, mentorship_id, title, target_date, status, created_at, updated_at
+		FROM goals WHERE id = $1
+	`, id).Scan(&g.ID, &g.MentorshipID, &g.Title, &g.TargetDate, &g.Status, &g.CreatedAt, &g.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &g, nil
 }
 
 func (q *Queries) InsertNotification(ctx context.Context, userID, ntype, payload, sendAt string) error {
@@ -389,9 +440,9 @@ func (q *Queries) ListMentorsForAdmin(ctx context.Context, status string, limit 
 	argIdx := 1
 
 	if status == "unverified" {
-		where += fmt.Sprintf(" AND mp.verified_at IS NULL")
+		where += " AND mp.verified_at IS NULL"
 	} else if status == "verified" {
-		where += fmt.Sprintf(" AND mp.verified_at IS NOT NULL")
+		where += " AND mp.verified_at IS NOT NULL"
 	}
 
 	if cursor != "" {
@@ -450,15 +501,15 @@ func (q *Queries) UpdateMentorVerification(ctx context.Context, mentorID string,
 }
 
 type AdminReport struct {
-	ID            string     `db:"id"`
-	ReporterID    string     `db:"reporter_id"`
-	TargetUserID  string     `db:"target_user_id"`
-	Reason        string     `db:"reason"`
-	Status        string     `db:"status"`
-	ResolvedBy    *string    `db:"resolved_by"`
+	ID             string    `db:"id"`
+	ReporterID     string    `db:"reporter_id"`
+	TargetUserID   string    `db:"target_user_id"`
+	Reason         string    `db:"reason"`
+	Status         string    `db:"status"`
+	ResolvedBy     *string   `db:"resolved_by"`
 	ResolutionNote string    `db:"resolution_note"`
-	CreatedAt     time.Time  `db:"created_at"`
-	UpdatedAt     time.Time  `db:"updated_at"`
+	CreatedAt      time.Time `db:"created_at"`
+	UpdatedAt      time.Time `db:"updated_at"`
 }
 
 func (q *Queries) ListReportsForAdmin(ctx context.Context, status string, limit int, cursor string) ([]*AdminReport, error) {
@@ -526,12 +577,12 @@ func (q *Queries) LogAdminAccess(ctx context.Context, adminID string, action str
 // Policy queries
 
 type PolicyVersion struct {
-	ID          string     `db:"id"`
-	Title       string     `db:"title"`
-	Version     string     `db:"version"`
-	Content     string     `db:"content"`
-	EffectiveAt time.Time  `db:"effective_at"`
-	CreatedAt   time.Time  `db:"created_at"`
+	ID          string    `db:"id"`
+	Title       string    `db:"title"`
+	Version     string    `db:"version"`
+	Content     string    `db:"content"`
+	EffectiveAt time.Time `db:"effective_at"`
+	CreatedAt   time.Time `db:"created_at"`
 }
 
 func (q *Queries) CreatePolicyVersion(ctx context.Context, title, version, content string) (string, error) {
@@ -594,12 +645,12 @@ func (q *Queries) GetLatestPolicyVersion(ctx context.Context) (*PolicyVersion, e
 }
 
 type PolicyAcceptance struct {
-	ID             string     `db:"id"`
-	UserID         string     `db:"user_id"`
+	ID              string    `db:"id"`
+	UserID          string    `db:"user_id"`
 	PolicyVersionID string    `db:"policy_version_id"`
-	AcceptedAt     time.Time  `db:"accepted_at"`
-	IPHash         string     `db:"ip_hash"`
-	CreatedAt      time.Time  `db:"created_at"`
+	AcceptedAt      time.Time `db:"accepted_at"`
+	IPHash          string    `db:"ip_hash"`
+	CreatedAt       time.Time `db:"created_at"`
 }
 
 func (q *Queries) CreatePolicyAcceptance(ctx context.Context, userID, policyVersionID, ipHash string) (string, error) {
@@ -642,12 +693,12 @@ func (q *Queries) UpdateUserStatus(ctx context.Context, id, status string) error
 // Consent event queries
 
 type ConsentEvent struct {
-	ID        string     `db:"id"`
+	ID         string    `db:"id"`
 	GuardianID string    `db:"guardian_id"`
-	MenteeID   string     `db:"mentee_id"`
-	Event     string     `db:"event"`
-	Timestamp time.Time  `db:"timestamp"`
-	IPHash    string     `db:"ip_hash"`
+	MenteeID   string    `db:"mentee_id"`
+	Event      string    `db:"event"`
+	Timestamp  time.Time `db:"timestamp"`
+	IPHash     string    `db:"ip_hash"`
 }
 
 func (q *Queries) CreateConsentEvent(ctx context.Context, guardianID, menteeID, event, ipHash string) (string, error) {
@@ -687,18 +738,18 @@ func (q *Queries) ListConsentEvents(ctx context.Context, menteeID string, limit 
 // Message queries
 
 type Conversation struct {
-	ID             string     `db:"id"`
-	MentorshipID   string     `db:"mentorship_id"`
-	MentorID       string     `db:"mentor_id"`
-	MenteeID       string     `db:"mentee_id"`
-	OtherUserID    string     `db:"other_user_id"`
-	OtherFullName  string     `db:"other_full_name"`
-	OtherRole      string     `db:"other_role"`
-	LastMessage    string     `db:"last_message"`
-	LastMessageAt  *time.Time `db:"last_message_at"`
-	UnreadCount    int        `db:"unread_count"`
-	CreatedAt      time.Time  `db:"created_at"`
-	UpdatedAt      time.Time  `db:"updated_at"`
+	ID            string     `db:"id"`
+	MentorshipID  string     `db:"mentorship_id"`
+	MentorID      string     `db:"mentor_id"`
+	MenteeID      string     `db:"mentee_id"`
+	OtherUserID   string     `db:"other_user_id"`
+	OtherFullName string     `db:"other_full_name"`
+	OtherRole     string     `db:"other_role"`
+	LastMessage   string     `db:"last_message"`
+	LastMessageAt *time.Time `db:"last_message_at"`
+	UnreadCount   int        `db:"unread_count"`
+	CreatedAt     time.Time  `db:"created_at"`
+	UpdatedAt     time.Time  `db:"updated_at"`
 }
 
 func (q *Queries) GetOrCreateConversation(ctx context.Context, mentorshipID, userID string) (string, error) {
@@ -813,13 +864,13 @@ func (q *Queries) GetConversation(ctx context.Context, conversationID, userID st
 }
 
 type Message struct {
-	ID         string     `db:"id"`
-	ConversationID string   `db:"conversation_id"`
-	SenderID   string     `db:"sender_id"`
-	Body       string     `db:"body"`
-	ReadAt     *time.Time `db:"read_at"`
-	HiddenAt   *time.Time `db:"hidden_at"`
-	CreatedAt  time.Time  `db:"created_at"`
+	ID             string     `db:"id"`
+	ConversationID string     `db:"conversation_id"`
+	SenderID       string     `db:"sender_id"`
+	Body           string     `db:"body"`
+	ReadAt         *time.Time `db:"read_at"`
+	HiddenAt       *time.Time `db:"hidden_at"`
+	CreatedAt      time.Time  `db:"created_at"`
 }
 
 func (q *Queries) ListMessages(ctx context.Context, conversationID, userID string, limit int, cursor string) ([]*Message, error) {

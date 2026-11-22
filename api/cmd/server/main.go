@@ -13,16 +13,16 @@ import (
 	"malkia-mentor/api/internal/auth"
 	"malkia-mentor/api/internal/config"
 	"malkia-mentor/api/internal/db"
+	"malkia-mentor/api/internal/goals"
 	"malkia-mentor/api/internal/httpx"
-	"malkia-mentor/api/internal/users"
+	"malkia-mentor/api/internal/matching"
 	"malkia-mentor/api/internal/mentors"
 	"malkia-mentor/api/internal/mentorships"
-	"malkia-mentor/api/internal/matching"
 	"malkia-mentor/api/internal/messages"
-	"malkia-mentor/api/internal/sessions"
-	"malkia-mentor/api/internal/goals"
 	"malkia-mentor/api/internal/policies"
 	"malkia-mentor/api/internal/profiles"
+	"malkia-mentor/api/internal/sessions"
+	"malkia-mentor/api/internal/users"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -47,7 +47,7 @@ func main() {
 		slog.Error("failed to connect to database", "error", err)
 		os.Exit(1)
 	}
-	defer pool.Close(context.Background())
+	defer pool.Close()
 
 	if err := db.Migrate(cfg.DatabaseURL); err != nil {
 		slog.Error("failed to run migrations (may already be applied)", "error", err)
@@ -86,6 +86,12 @@ func main() {
 		r.Route("/me", func(r chi.Router) {
 			r.Get("/", authService.AuthMiddleware(usersService.GetMe))
 			r.Put("/", authService.AuthMiddleware(usersService.UpdateMe))
+			r.Get("/blocks", authService.AuthMiddleware(usersService.ListBlocks))
+			r.Post("/blocks", authService.AuthMiddleware(usersService.CreateBlock))
+			r.Delete("/blocks/{id}", authService.AuthMiddleware(usersService.RemoveBlock))
+			r.Post("/reports", authService.AuthMiddleware(usersService.CreateReport))
+			r.Get("/export", authService.AuthMiddleware(usersService.ExportMe))
+			r.Delete("/", authService.AuthMiddleware(usersService.DeleteMe))
 		})
 
 		r.Route("/profiles", func(r chi.Router) {

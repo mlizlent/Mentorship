@@ -2,7 +2,7 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'secondary' | 'success' | 'warning' | 'danger'
+  variant?: 'default' | 'secondary' | 'success' | 'warning' | 'danger' | 'outline'
   children: React.ReactNode
 }
 
@@ -12,6 +12,7 @@ const badgeVariants = {
   success: 'bg-success text-white',
   warning: 'bg-warning text-white',
   danger: 'bg-danger text-white',
+  outline: 'border border-neutral-300 text-neutral-800 bg-transparent',
 }
 
 export const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(

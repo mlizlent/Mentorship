@@ -29,7 +29,10 @@ func setupTestService(t *testing.T) (*Service, *db.Queries) {
 	if err != nil {
 		t.Skipf("skipping admin test: cannot connect to test database: %v", err)
 	}
-	t.Cleanup(func() { conn.Close(context.Background()) })
+	if err := conn.Ping(context.Background()); err != nil {
+		t.Skipf("skipping admin test: cannot connect to test database: %v", err)
+	}
+	t.Cleanup(func() { conn.Close() })
 
 	queries := db.New(conn)
 	cfg := &config.Config{

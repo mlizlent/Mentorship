@@ -112,8 +112,8 @@ func (s *Service) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"data":         filtered,
-		"next_cursor":  nextCursor,
+		"data":        filtered,
+		"next_cursor": nextCursor,
 	})
 }
 
@@ -132,17 +132,17 @@ func (s *Service) Get(w http.ResponseWriter, r *http.Request) {
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"mentor": map[string]interface{}{
-			"id":              mentor.UserID,
-			"full_name":       mentor.FullName,
-			"bio":             mentor.Bio,
-			"expertise":       mentor.Expertise,
+			"id":               mentor.UserID,
+			"full_name":        mentor.FullName,
+			"bio":              mentor.Bio,
+			"expertise":        mentor.Expertise,
 			"years_experience": mentor.YearsExperience,
-			"county":          mentor.County,
-			"languages":       mentor.Languages,
-			"hours_per_month": mentor.HoursPerMonth,
-			"max_mentees":     mentor.MaxMentees,
-			"active_mentees":  capacity,
-			"verified":        mentor.VerifiedAt != nil,
+			"county":           mentor.County,
+			"languages":        mentor.Languages,
+			"hours_per_month":  mentor.HoursPerMonth,
+			"max_mentees":      mentor.MaxMentees,
+			"active_mentees":   capacity,
+			"verified":         mentor.VerifiedAt != nil,
 		},
 	})
 }

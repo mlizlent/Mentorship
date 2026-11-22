@@ -20,7 +20,7 @@ func main() {
 		slog.Error("failed to connect", "error", err)
 		return
 	}
-	defer conn.Close(ctx)
+	defer conn.Close()
 
 	queries := db.New(conn)
 

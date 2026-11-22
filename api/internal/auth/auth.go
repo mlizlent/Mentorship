@@ -108,3 +108,29 @@ func (s *Service) validateToken(tokenStr string) (*jwt.RegisteredClaims, error) 
 	}
 	return nil, ErrInvalidCredentials
 }
+
+// SubjectFromToken verifies the access token signature and returns its subject
+// even when the token has expired. It is used by the refresh flow to identify
+// the user whose refresh token cookie should be validated.
+func (s *Service) SubjectFromToken(tokenStr string) (string, error) {
+	if tokenStr == "" {
+		return "", ErrInvalidCredentials
+	}
+
+	claims := &jwt.RegisteredClaims{}
+	_, err := jwt.ParseWithClaims(
+		tokenStr,
+		claims,
+		func(token *jwt.Token) (any, error) {
+			return []byte(s.cfg.JWTSecret), nil
+		},
+		jwt.WithoutClaimsValidation(),
+	)
+	if err != nil {
+		return "", err
+	}
+	if claims.Subject == "" {
+		return "", ErrInvalidCredentials
+	}
+	return claims.Subject, nil
+}

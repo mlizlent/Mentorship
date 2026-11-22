@@ -138,7 +138,7 @@ func (s *Service) ListMessages(w http.ResponseWriter, r *http.Request) {
 	limit := 50
 	cursor := r.URL.Query().Get("cursor")
 
-	conversation, err := s.queries.GetConversation(r.Context(), conversationID, userID)
+	_, err := s.queries.GetConversation(r.Context(), conversationID, userID)
 	if err != nil {
 		// Guardian may view a mentee's conversation.
 		if menteeID := r.URL.Query().Get("mentee_id"); menteeID != "" {
@@ -147,7 +147,7 @@ func (s *Service) ListMessages(w http.ResponseWriter, r *http.Request) {
 				httpx.WriteError(w, "forbidden", "conversation not found or access denied", nil)
 				return
 			}
-			conversation, err = s.queries.GetConversation(r.Context(), conversationID, menteeID)
+			conversation, err := s.queries.GetConversation(r.Context(), conversationID, menteeID)
 			if err != nil {
 				httpx.WriteError(w, "forbidden", "conversation not found or access denied", nil)
 				return
@@ -245,9 +245,8 @@ func (s *Service) CreateMessage(w http.ResponseWriter, r *http.Request) {
 		"sender_id":       userID,
 		"body":            body,
 	})
-	if err := s.queries.InsertOutboxNotification(r.Context(), recipientID, "new_message", string(payload)); err != nil {
-		// Non-fatal: notification failure must not block message delivery.
-	}
+	// Non-fatal: notification failure must not block message delivery.
+	_ = s.queries.InsertOutboxNotification(r.Context(), recipientID, "new_message", string(payload))
 
 	// Under-18 contact-detail admin flag.
 	if contactRemoved {

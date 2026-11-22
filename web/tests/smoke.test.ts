@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test('landing page loads and shows title', async ({ page }) => {
   await page.goto('/')
-  await expect(page).toHaveTitle(/Malkia Mentor/)
+  await expect(page).toHaveTitle(/CrownPath/)
   await expect(page.locator('h1')).toContainText('Crowning African Tech.')
 })
 

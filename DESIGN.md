@@ -1,8 +1,8 @@
-# Malkia Mentor System Design
+# CrownPath System Design
 
 ## Overview
 
-Malkia Mentor is a mentorship platform connecting mentees with verified mentors across African tech.
+CrownPath is a mentorship platform connecting mentees with verified mentors across African tech.
 Built as a monorepo with a Go backend and React frontend.
 
 ## Architecture
@@ -67,7 +67,7 @@ GET    /api/v1/admin/metrics/export.csv
 - TanStack Query for server state
 - React Hook Form + Zod for forms
 - UI component library: Button, Input, Textarea, Select, Checkbox, Card, Badge, Modal, Toast, Spinner, EmptyState, Tabs, Avatar
-- Tailwind CSS with primary color `#7C3AED`
+- Tailwind CSS with primary color `#DA70D6` (orchid), dark purple `#1A0D29` background, IBM Plex Mono
 
 ### Pages
 - `/` — LandingPage

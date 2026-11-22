@@ -9,7 +9,7 @@ export default function DesignPage() {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-ink">System Design</h2>
       <p className="text-neutral-600">
-        Architecture, data model, API design, and security for Malkia Mentor.
+        Architecture, data model, API design, and security for CrownPath.
       </p>
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">

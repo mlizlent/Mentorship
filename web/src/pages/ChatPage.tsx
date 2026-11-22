@@ -105,7 +105,6 @@ export default function ChatPage() {
     <div className="flex h-screen flex-col overflow-hidden">
       <header className="bg-primary-700 text-white px-4 py-3 shadow-sm flex items-center justify-between">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/messages')}>
-          <span className="text-xl font-bold text-primary-300">←</span>
           <div>
             <h3 className="font-semibold text-white">Conversation</h3>
             <p className="text-xs text-primary-300">Mentorship messaging</p>
@@ -116,7 +115,7 @@ export default function ChatPage() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto bg-neutral-50 p-4" ref={messagesEndRef}>
+      <main className="flex-1 overflow-y-auto bg-surface-container-low p-4" ref={messagesEndRef}>
         <div className="max-w-2xl mx-auto">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-center text-neutral-500">
@@ -138,7 +137,7 @@ export default function ChatPage() {
                     'max-w-[80%] px-4 py-3 rounded-2xl shadow-sm border',
                     isMine
                       ? 'bg-primary-600 text-white border-primary-700 ml-auto rounded-tr-none'
-                      : 'bg-white text-ink border-neutral-300 rounded-tl-none'
+                      : 'bg-surface-container-low text-ink border-outline-variant rounded-tl-none'
                   )}>
                     <p className="text-sm">{m.body}</p>
                     <p className="text-[10px] mt-1 text-right opacity-70">
@@ -169,7 +168,7 @@ export default function ChatPage() {
         </div>
       </main>
 
-      <footer className="bg-white border-t border-neutral-200 p-4">
+      <footer className="bg-surface-container-low border-t border-outline-variant p-4">
         <div className="max-w-2xl mx-auto">
           <form onSubmit={handleSend} className="flex gap-2">
             <Input
