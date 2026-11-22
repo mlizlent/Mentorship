@@ -1,8 +1,8 @@
 services:
   - type: web
-    name: crownpath-api
+    name: crownpath
     runtime: docker
-    dockerfilePath: ./api/Dockerfile
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: PORT
         value: 8080
@@ -45,15 +45,9 @@ services:
       - key: SMTP_FROM
         value: noreply@crownpath.app
       - key: FRONTEND_URL
-        value: https://crownpath-web.onrender.com
-
-  - type: web
-    name: crownpath-web
-    runtime: docker
-    dockerfilePath: ./web/Dockerfile
-    envVars:
+        value: https://crownpath.onrender.com
       - key: VITE_API_URL
-        value: https://crownpath-api.onrender.com/api/v1
+        value: https://crownpath.onrender.com/api/v1
 
 databases:
   - name: crownpath-db

@@ -40,7 +40,7 @@ RUN npm ci
 COPY web/ ./
 
 # Build the web app (uses VITE_API_URL from build arg)
-ARG VITE_API_URL=http://localhost:8080/api/v1
+ARG VITE_API_URL=/api/v1
 ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
