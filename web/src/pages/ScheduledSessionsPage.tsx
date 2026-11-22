@@ -249,12 +249,12 @@ export default function ScheduledSessionsPage() {
                         Message Mentor
                       </Link>
                       {sessionId &&
-                        status !== 'cancelled' &&
+                        status !== 'canceled' &&
                         status !== 'completed' && (
                           <button
                             type="button"
                             onClick={() =>
-                              updateSession.mutate({ id: sessionId, status: 'cancelled' })
+                              updateSession.mutate({ id: sessionId, status: 'canceled' })
                             }
                             disabled={updateSession.isPending}
                             className="px-4 py-2 rounded-full border border-red-200 text-xs font-bold text-red-600 hover:bg-red-50 transition-colors disabled:opacity-60"

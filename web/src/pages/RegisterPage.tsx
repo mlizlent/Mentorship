@@ -40,7 +40,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-surface px-4">
       <div className="max-w-md w-full bg-surface-container-low rounded-lg shadow-sm p-6">
         <h1 className="text-2xl font-bold text-ink mb-2">Create Mentee Account</h1>
-        <p className="text-primary-500 text-sm font-medium mb-6">Join Malkia to connect with leading tech mentors.</p>
+        <p className="text-primary-500 text-sm font-medium mb-6">Join CrownPath to connect with leading tech mentors.</p>
         {error && (
           <div className="mb-4 p-3 bg-danger/10 border border-danger/20 text-danger text-sm rounded">
             {error}

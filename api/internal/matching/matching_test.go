@@ -31,9 +31,9 @@ func TestSkillScore(t *testing.T) {
 
 func TestAvailabilityScore(t *testing.T) {
 	tests := []struct {
-		name    string
-		mentee  map[string]bool
-		mentor  map[string]bool
+		name     string
+		mentee   map[string]bool
+		mentor   map[string]bool
 		expected float64
 	}{
 		{"full overlap", map[string]bool{"mon": true, "wed": true}, map[string]bool{"mon": true, "wed": true, "fri": true}, 100},
@@ -72,10 +72,10 @@ func TestCapacityScore(t *testing.T) {
 
 func TestLanguageScore(t *testing.T) {
 	tests := []struct {
-		name         string
-		menteeLangs  []string
-		mentorLangs  []string
-		expected     float64
+		name        string
+		menteeLangs []string
+		mentorLangs []string
+		expected    float64
 	}{
 		{"shared language", []string{"en", "sw"}, []string{"en"}, 100},
 		{"no shared", []string{"en"}, []string{"sw"}, 0},
@@ -116,28 +116,28 @@ func TestExperienceFitScore(t *testing.T) {
 
 func TestScoreTotal(t *testing.T) {
 	s := &Service{cfg: &config.Config{MatchingWeights: config.MatchingWeights{
-		Skills:         40,
-		Availability:   25,
-		Capacity:       15,
-		Language:       10,
-		ExperienceFit:  10,
+		Skills:        40,
+		Availability:  25,
+		Capacity:      15,
+		Language:      10,
+		ExperienceFit: 10,
 	}}}
 	mentee := MenteeInput{
-		ID:            "mentee-1",
-		Interests:     []string{"react", "go"},
-		Level:         "beginner",
-		Languages:     []string{"en"},
-		Availability:  map[string]bool{"mon": true, "wed": true},
+		ID:           "mentee-1",
+		Interests:    []string{"react", "go"},
+		Level:        "beginner",
+		Languages:    []string{"en"},
+		Availability: map[string]bool{"mon": true, "wed": true},
 	}
 	mentor := MentorInput{
-		ID:               "mentor-1",
-		FullName:         "Test Mentor",
-		Expertise:        []string{"react", "go", "python"},
-		YearsExperience:  5,
-		Languages:        []string{"en", "sw"},
-		MaxMentees:       3,
-		ActiveMentees:    1,
-		Availability:     map[string]bool{"mon": true, "wed": true, "fri": true},
+		ID:              "mentor-1",
+		FullName:        "Test Mentor",
+		Expertise:       []string{"react", "go", "python"},
+		YearsExperience: 5,
+		Languages:       []string{"en", "sw"},
+		MaxMentees:      3,
+		ActiveMentees:   1,
+		Availability:    map[string]bool{"mon": true, "wed": true, "fri": true},
 	}
 
 	breakdown, reason := s.Score(mentee, mentor)

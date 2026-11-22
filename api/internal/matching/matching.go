@@ -11,41 +11,41 @@ import (
 )
 
 type SignalBreakdown struct {
-	Skills         float64 `json:"skills"`
-	Availability   float64 `json:"availability"`
-	Capacity       float64 `json:"capacity"`
-	Language       float64 `json:"language"`
-	ExperienceFit  float64 `json:"experience_fit"`
-	Total          float64 `json:"total"`
+	Skills        float64 `json:"skills"`
+	Availability  float64 `json:"availability"`
+	Capacity      float64 `json:"capacity"`
+	Language      float64 `json:"language"`
+	ExperienceFit float64 `json:"experience_fit"`
+	Total         float64 `json:"total"`
 }
 
 type Suggestion struct {
-	MentorID   string             `json:"mentor_id"`
-	FullName   string             `json:"full_name"`
-	Score      float64            `json:"score"`
-	Breakdown  SignalBreakdown    `json:"breakdown"`
-	Reason     string             `json:"reason"`
+	MentorID  string          `json:"mentor_id"`
+	FullName  string          `json:"full_name"`
+	Score     float64         `json:"score"`
+	Breakdown SignalBreakdown `json:"breakdown"`
+	Reason    string          `json:"reason"`
 }
 
 type MentorInput struct {
-	ID               string
-	FullName         string
-	Expertise        []string
-	YearsExperience  int
-	Languages        []string
-	MaxMentees       int
-	ActiveMentees    int
-	Availability     map[string]bool // day -> available
+	ID                string
+	FullName          string
+	Expertise         []string
+	YearsExperience   int
+	Languages         []string
+	MaxMentees        int
+	ActiveMentees     int
+	Availability      map[string]bool // day -> available
 	ApprovedForMinors bool
 }
 
 type MenteeInput struct {
-	ID              string
-	Interests       []string
-	Level           string // beginner, intermediate, advanced
-	Languages       []string
-	Availability    map[string]bool // day -> available
-	IsMinor         bool
+	ID           string
+	Interests    []string
+	Level        string // beginner, intermediate, advanced
+	Languages    []string
+	Availability map[string]bool // day -> available
+	IsMinor      bool
 }
 
 type Service struct {
@@ -73,12 +73,12 @@ func (s *Service) Score(mentee MenteeInput, mentor MentorInput) (SignalBreakdown
 	reason := reasonString(skills, availability, capacity, language, experienceFit, mentor.FullName)
 
 	return SignalBreakdown{
-		Skills:         skills,
-		Availability:   availability,
-		Capacity:       capacity,
-		Language:       language,
-		ExperienceFit:  experienceFit,
-		Total:          math.Round(total*100) / 100,
+		Skills:        skills,
+		Availability:  availability,
+		Capacity:      capacity,
+		Language:      language,
+		ExperienceFit: experienceFit,
+		Total:         math.Round(total*100) / 100,
 	}, reason
 }
 
@@ -150,9 +150,9 @@ func languageScore(menteeLangs, mentorLangs []string) float64 {
 
 func experienceFitScore(menteeLevel string, yearsExp int) float64 {
 	levelMin := map[string]int{
-		"beginner":      0,
-		"intermediate":  3,
-		"advanced":      6,
+		"beginner":     0,
+		"intermediate": 3,
+		"advanced":     6,
 	}[menteeLevel]
 
 	if yearsExp >= levelMin+2 {

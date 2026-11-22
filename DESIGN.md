@@ -1,8 +1,8 @@
-# Malkia Mentor System Design
+# CrownPath System Design
 
 ## Overview
 
-Malkia Mentor is a mentorship platform connecting mentees with verified mentors across African tech.
+CrownPath is a mentorship platform connecting mentees with verified mentors across African tech.
 Built as a monorepo with a Go backend and React frontend.
 
 ## Architecture

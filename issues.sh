@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Creates labels, milestones and issues for the Malkia Labs mentorship app.
+# Creates labels, milestones and issues for the CrownPath mentorship app.
 # Usage: ./create-issues.sh owner/repo   (needs the GitHub CLI, signed in: gh auth login)
 set -euo pipefail
 

@@ -52,43 +52,43 @@ func Seed(databaseURL string) error {
 // Common types
 
 type User struct {
-	ID          string     `db:"id"`
-	Email       string     `db:"email"`
-	PasswordHash string    `db:"password_hash"`
-	Role        string     `db:"role"`
-	FullName    string     `db:"full_name"`
-	DateOfBirth *time.Time `db:"date_of_birth"`
-	County      string     `db:"county"`
-	Language    string     `db:"language"`
-	Status      string     `db:"status"`
-	DeletedAt   *time.Time `db:"deleted_at"`
-	CreatedAt   time.Time  `db:"created_at"`
-	UpdatedAt   time.Time  `db:"updated_at"`
+	ID           string     `db:"id"`
+	Email        string     `db:"email"`
+	PasswordHash string     `db:"password_hash"`
+	Role         string     `db:"role"`
+	FullName     string     `db:"full_name"`
+	DateOfBirth  *time.Time `db:"date_of_birth"`
+	County       string     `db:"county"`
+	Language     string     `db:"language"`
+	Status       string     `db:"status"`
+	DeletedAt    *time.Time `db:"deleted_at"`
+	CreatedAt    time.Time  `db:"created_at"`
+	UpdatedAt    time.Time  `db:"updated_at"`
 }
 
 type MentorProfile struct {
-	UserID          string         `db:"user_id"`
-	Bio             string         `db:"bio"`
-	Expertise       []string       `db:"expertise"`
-	YearsExperience int            `db:"years_experience"`
-	HoursPerMonth   int            `db:"hours_per_month"`
-	Languages       []string       `db:"languages"`
-	Availability    string         `db:"availability"`
-	MaxMentees      int            `db:"max_mentees"`
-	VerifiedAt      *time.Time     `db:"verified_at"`
-	VerifiedBy      *string        `db:"verified_by"`
-	FullName        string         `db:"full_name"`
-	County          string         `db:"county"`
-	Verified        bool           `db:"verified"`
+	UserID          string     `db:"user_id"`
+	Bio             string     `db:"bio"`
+	Expertise       []string   `db:"expertise"`
+	YearsExperience int        `db:"years_experience"`
+	HoursPerMonth   int        `db:"hours_per_month"`
+	Languages       []string   `db:"languages"`
+	Availability    string     `db:"availability"`
+	MaxMentees      int        `db:"max_mentees"`
+	VerifiedAt      *time.Time `db:"verified_at"`
+	VerifiedBy      *string    `db:"verified_by"`
+	FullName        string     `db:"full_name"`
+	County          string     `db:"county"`
+	Verified        bool       `db:"verified"`
 }
 
 type MenteeProfile struct {
-	UserID    string   `db:"user_id"`
-	Goals     string   `db:"goals"`
-	Interests []string `db:"interests"`
-	Level     string   `db:"level"`
-	Availability string `db:"availability"`
-	GuardianID *string  `db:"guardian_id"`
+	UserID       string   `db:"user_id"`
+	Goals        string   `db:"goals"`
+	Interests    []string `db:"interests"`
+	Level        string   `db:"level"`
+	Availability string   `db:"availability"`
+	GuardianID   *string  `db:"guardian_id"`
 }
 
 type Mentorship struct {
@@ -105,26 +105,26 @@ type Mentorship struct {
 }
 
 type Session struct {
-	ID             string     `db:"id"`
-	MentorshipID   string     `db:"mentorship_id"`
-	ScheduledAt    time.Time  `db:"scheduled_at"`
-	DurationMin    int        `db:"duration_min"`
-	MeetingLink    string     `db:"meeting_link"`
-	Status         string     `db:"status"`
-	MentorNotes    string     `db:"mentor_notes"`
-	MenteeNotes    string     `db:"mentee_notes"`
-	MenteeRating   *int       `db:"mentee_rating"`
-	MentorRating   *int       `db:"mentor_rating"`
-	CreatedAt      time.Time  `db:"created_at"`
-	UpdatedAt      time.Time  `db:"updated_at"`
+	ID           string    `db:"id"`
+	MentorshipID string    `db:"mentorship_id"`
+	ScheduledAt  time.Time `db:"scheduled_at"`
+	DurationMin  int       `db:"duration_min"`
+	MeetingLink  string    `db:"meeting_link"`
+	Status       string    `db:"status"`
+	MentorNotes  string    `db:"mentor_notes"`
+	MenteeNotes  string    `db:"mentee_notes"`
+	MenteeRating *int      `db:"mentee_rating"`
+	MentorRating *int      `db:"mentor_rating"`
+	CreatedAt    time.Time `db:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at"`
 }
 
 type Goal struct {
-	ID          string     `db:"id"`
-	MentorshipID string    `db:"mentorship_id"`
-	Title       string     `db:"title"`
-	TargetDate  *time.Time `db:"target_date"`
-	Status      string     `db:"status"`
-	CreatedAt   time.Time  `db:"created_at"`
-	UpdatedAt   time.Time  `db:"updated_at"`
+	ID           string     `db:"id"`
+	MentorshipID string     `db:"mentorship_id"`
+	Title        string     `db:"title"`
+	TargetDate   *time.Time `db:"target_date"`
+	Status       string     `db:"status"`
+	CreatedAt    time.Time  `db:"created_at"`
+	UpdatedAt    time.Time  `db:"updated_at"`
 }

@@ -46,7 +46,7 @@ const steps = [
     number: '02',
     icon: 'workspace_premium',
     iconFilled: true,
-    title: '2. Match with a Malkia Leader',
+    title: '2. Match with a CrownPath Leader',
     description:
       'Our intelligent algorithm pairs you with vetted senior women leaders in your domain based on tech stacks, lived experiences, and shared career horizons.',
     badgeIcon: 'handshake',
@@ -108,7 +108,7 @@ export default function LandingPage() {
             </span>
             <div className="flex flex-col">
               <span className="font-headline-sm text-headline-sm text-primary leading-tight font-extrabold">
-                Malkia Mentor
+                CrownPath
               </span>
               <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold tracking-wider uppercase text-[10px]">
                 by Malkia Labs
@@ -142,7 +142,7 @@ export default function LandingPage() {
               to="/register"
               className="inline-flex items-center justify-center font-label-md text-label-md text-on-primary bg-primary-container hover:bg-primary px-6 py-2.5 rounded-full shadow-[0_4px_14px_rgba(124,58,237,0.3)] transition-all font-semibold"
             >
-              Join Malkia
+              Join CrownPath
             </Link>
             <button
               aria-label="Toggle Mobile Menu"
@@ -398,7 +398,7 @@ export default function LandingPage() {
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-center md:justify-start gap-2">
               <span className="font-headline-sm text-headline-sm text-primary font-bold">
-                Malkia Mentor
+                CrownPath
               </span>
               <span className="font-label-sm text-label-sm text-secondary bg-secondary-fixed px-2 py-0.5 rounded-full font-semibold">
                 Pan-African Tech

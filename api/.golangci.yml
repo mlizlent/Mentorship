@@ -1,5 +1,3 @@
-version: "3"
-
 linters:
   enable:
     - gofmt
@@ -23,10 +21,10 @@ issues:
   exclude-rules:
     - linters:
         - errcheck
-      text: ".*\.Close\(\)"
+      text: '.*\.Close\(\)'
     - linters:
         - errcheck
-      text: ".*\.Write\(\)"
+      text: '.*\.Write\(\)'
 
 run:
   tests: true

@@ -21,23 +21,23 @@ type Config struct {
 	Environment     string
 	MentorCapacity  int
 	MatchingWeights MatchingWeights
-	SMTPHost     string
-	SMTPPort     int
-	SMTPUser     string
-	SMTPPassword string
-	SMTPFrom     string
-	FrontendURL  string
+	SMTPHost        string
+	SMTPPort        int
+	SMTPUser        string
+	SMTPPassword    string
+	SMTPFrom        string
+	FrontendURL     string
 	// Feature flags
 	MessagingEnabled        bool
 	GuardianCanViewMessages bool
 }
 
 type MatchingWeights struct {
-	Skills         int
-	Availability   int
-	Capacity       int
-	Language       int
-	ExperienceFit  int
+	Skills        int
+	Availability  int
+	Capacity      int
+	Language      int
+	ExperienceFit int
 }
 
 func Load() (*Config, error) {
@@ -55,11 +55,11 @@ func Load() (*Config, error) {
 		Environment:     getEnv("ENVIRONMENT", "development"),
 		MentorCapacity:  getEnvInt("MENTOR_CAPACITY", 3),
 		MatchingWeights: MatchingWeights{
-			Skills:         getEnvInt("WEIGHT_SKILLS", 40),
-			Availability:   getEnvInt("WEIGHT_AVAILABILITY", 25),
-			Capacity:       getEnvInt("WEIGHT_CAPACITY", 15),
-			Language:       getEnvInt("WEIGHT_LANGUAGE", 10),
-			ExperienceFit:  getEnvInt("WEIGHT_EXPERIENCE_FIT", 10),
+			Skills:        getEnvInt("WEIGHT_SKILLS", 40),
+			Availability:  getEnvInt("WEIGHT_AVAILABILITY", 25),
+			Capacity:      getEnvInt("WEIGHT_CAPACITY", 15),
+			Language:      getEnvInt("WEIGHT_LANGUAGE", 10),
+			ExperienceFit: getEnvInt("WEIGHT_EXPERIENCE_FIT", 10),
 		},
 		SMTPHost:     getEnv("SMTP_HOST", "localhost"),
 		SMTPPort:     getEnvInt("SMTP_PORT", 1025),

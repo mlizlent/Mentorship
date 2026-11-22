@@ -117,7 +117,7 @@ func (s *Service) List(w http.ResponseWriter, r *http.Request) {
 }
 
 type updateRequest struct {
-	Status string `json:"status" validate:"required,oneof=scheduled confirmed completed cancelled"`
+	Status string `json:"status" validate:"required,oneof=scheduled confirmed completed canceled"`
 }
 
 func (s *Service) Update(w http.ResponseWriter, r *http.Request) {

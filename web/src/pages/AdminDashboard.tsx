@@ -229,7 +229,7 @@ export default function AdminDashboard() {
       const url = window.URL.createObjectURL(new Blob([res.data as BlobPart]))
       const a = document.createElement('a')
       a.href = url
-      a.download = `malkia-metrics-${new Date().toISOString().slice(0, 10)}.csv`
+      a.download = `crownpath-metrics-${new Date().toISOString().slice(0, 10)}.csv`
       a.click()
       window.URL.revokeObjectURL(url)
       toast.success('Metrics CSV exported successfully!')
@@ -247,7 +247,7 @@ export default function AdminDashboard() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `malkia-admin-metrics-${new Date().toISOString().slice(0, 10)}.csv`
+      a.download = `crownpath-admin-metrics-${new Date().toISOString().slice(0, 10)}.csv`
       a.click()
       URL.revokeObjectURL(url)
       toast.success('Metrics CSV exported!')

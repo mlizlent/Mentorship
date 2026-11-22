@@ -32,17 +32,17 @@ func NewService(queries *db.Queries, authSvc *auth.Service, cfg *config.Config) 
 	r.Post("/login", s.Login)
 	r.Post("/refresh", s.Refresh)
 	r.Post("/logout", s.Logout)
-		r.Get("/me", s.GetMe)
-		r.Put("/me", s.UpdateMe)
-		r.Route("/me/blocks", func(r chi.Router) {
-			r.Get("/", s.ListBlocks)
-			r.Post("/", s.CreateBlock)
-			r.Delete("/{id}", s.RemoveBlock)
-		})
-		r.Post("/me/reports", s.CreateReport)
-		r.Get("/me/export", s.ExportMe)
-		r.Delete("/me", s.DeleteMe)
-		s.chiRouter = r
+	r.Get("/me", s.GetMe)
+	r.Put("/me", s.UpdateMe)
+	r.Route("/me/blocks", func(r chi.Router) {
+		r.Get("/", s.ListBlocks)
+		r.Post("/", s.CreateBlock)
+		r.Delete("/{id}", s.RemoveBlock)
+	})
+	r.Post("/me/reports", s.CreateReport)
+	r.Get("/me/export", s.ExportMe)
+	r.Delete("/me", s.DeleteMe)
+	s.chiRouter = r
 	return s
 }
 
@@ -269,10 +269,6 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
 			"full_name": user.FullName,
 		},
 	})
-}
-
-type refreshRequest struct {
-	RefreshToken string `json:"refresh_token"`
 }
 
 func (s *Service) Refresh(w http.ResponseWriter, r *http.Request) {
@@ -611,11 +607,11 @@ func (s *Service) CreateReport(w http.ResponseWriter, r *http.Request) {
 }
 
 type exportData struct {
-	User             interface{}   `json:"user"`
-	Mentorships      interface{}   `json:"mentorships"`
-	Reports          interface{}   `json:"reports"`
-	Blocks           interface{}   `json:"blocks"`
-	PolicyAcceptance interface{}   `json:"policy_acceptances"`
+	User             interface{} `json:"user"`
+	Mentorships      interface{} `json:"mentorships"`
+	Reports          interface{} `json:"reports"`
+	Blocks           interface{} `json:"blocks"`
+	PolicyAcceptance interface{} `json:"policy_acceptances"`
 }
 
 func (s *Service) ExportMe(w http.ResponseWriter, r *http.Request) {

@@ -39,12 +39,12 @@ func (s *Service) Routes() *chi.Mux {
 }
 
 type PolicyVersionResponse struct {
-	ID          string     `json:"id"`
-	Title       string     `json:"title"`
-	Version     string     `json:"version"`
-	Content     string     `json:"content"`
-	EffectiveAt time.Time  `json:"effective_at"`
-	CreatedAt   time.Time  `json:"created_at"`
+	ID          string    `json:"id"`
+	Title       string    `json:"title"`
+	Version     string    `json:"version"`
+	Content     string    `json:"content"`
+	EffectiveAt time.Time `json:"effective_at"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 func (s *Service) ListPolicies(w http.ResponseWriter, r *http.Request) {
@@ -114,12 +114,12 @@ func (s *Service) AcceptPolicy(w http.ResponseWriter, r *http.Request) {
 }
 
 type consentEventResponse struct {
-	ID        string    `json:"id"`
-	GuardianID string   `json:"guardian_id"`
-	MenteeID   string   `json:"mentee_id"`
-	Event     string    `json:"event"`
-	Timestamp time.Time `json:"timestamp"`
-	IPHash    string    `json:"ip_hash"`
+	ID         string    `json:"id"`
+	GuardianID string    `json:"guardian_id"`
+	MenteeID   string    `json:"mentee_id"`
+	Event      string    `json:"event"`
+	Timestamp  time.Time `json:"timestamp"`
+	IPHash     string    `json:"ip_hash"`
 }
 
 func (s *Service) ListConsentEvents(w http.ResponseWriter, r *http.Request) {
@@ -144,12 +144,12 @@ func (s *Service) ListConsentEvents(w http.ResponseWriter, r *http.Request) {
 	var result []consentEventResponse
 	for _, e := range events {
 		result = append(result, consentEventResponse{
-			ID:        e.ID,
+			ID:         e.ID,
 			GuardianID: e.GuardianID,
 			MenteeID:   e.MenteeID,
-			Event:     e.Event,
-			Timestamp: e.Timestamp,
-			IPHash:    e.IPHash,
+			Event:      e.Event,
+			Timestamp:  e.Timestamp,
+			IPHash:     e.IPHash,
 		})
 	}
 

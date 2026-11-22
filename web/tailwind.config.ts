@@ -42,7 +42,7 @@ const config: Config = {
         success: '#10B981',
         warning: '#F59E0B',
         danger: '#EF4444',
-        // Malkia Labs (Material 3) landing-page palette
+        // CrownPath (Material 3) landing-page palette
         background: '#1A0D29',
         surface: '#1A0D29',
         'surface-bright': '#251A35',

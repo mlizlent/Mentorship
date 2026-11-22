@@ -1,4 +1,4 @@
-# Malkia Mentor
+# CrownPath
 
 Mentorship app for Malkia Labs — a women-led tech startup from Zone01 Kisumu, Kenya. The app lets mentees find and request mentors, lets mentors accept or decline, and tracks sessions, goals and progress. Admins verify mentors and watch impact.
 

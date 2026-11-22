@@ -107,7 +107,7 @@ export default function Layout() {
               </span>
               <div className="flex flex-col">
                 <span className="font-headline-sm text-headline-sm text-primary leading-tight font-extrabold">
-                  Malkia Mentor
+                  CrownPath
                 </span>
                 <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold tracking-wider uppercase text-[10px]">
                   Community Portal
