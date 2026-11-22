@@ -30,7 +30,7 @@ func Open(databaseURL string, maxOpenConns int) (*pgx.Conn, error) {
 }
 
 func Migrate(databaseURL string) error {
-	m, err := migrate.New("file://migrations", databaseURL)
+	m, err := migrate.New("file://internal/db/migrations", databaseURL)
 	if err != nil {
 		return fmt.Errorf("create migrate instance: %w", err)
 	}

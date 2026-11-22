@@ -3,12 +3,12 @@ import { test, expect } from '@playwright/test'
 test('landing page loads and shows title', async ({ page }) => {
   await page.goto('/')
   await expect(page).toHaveTitle(/Malkia Mentor/)
-  await expect(page.locator('h1')).toContainText('Malkia Mentor')
+  await expect(page.locator('h1')).toContainText('Crowning African Tech.')
 })
 
 test('navigation links work', async ({ page }) => {
   await page.goto('/')
-  await page.click('a:has-text("Find Mentors")')
+  await page.click('a:has-text("Find a Mentor")')
   await expect(page).toHaveURL(/.*\/mentors/)
 })
 

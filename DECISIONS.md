@@ -16,6 +16,7 @@
 - Registration is open to adults only (18+). Under-18 sign-up returns a clear message that guardian consent is coming later.
 - Rate limiting on register/login is planned but not yet implemented (see below).
 - Session notes are private to their author by default (mentor notes visible only to mentor, mentee notes only to mentee). This is noted in Task 9 of the spec.
+- CORS middleware (`httpx.CORS`) allows cross-origin requests from the frontend dev server (`localhost:5173`) with credentials, handling OPTIONS preflight for all API routes.
 
 ## Matching
 - Weights are configurable via environment variables and default to: skills 40%, availability 25%, capacity 15%, language 10%, experience fit 10%.
@@ -74,7 +75,7 @@
 - [x] Task 3 (issue 13): Design documentation + /design route
 - [x] Task 4 (issues 14-17): Frontend gaps
 - [x] Task 5 (issue 18): Admin dashboard with Recharts
-- [x] Task 6 (issue 19): PWA with vite-plugin-pwa, offline support
+- [x] Task 6 (issue 19): PWA with vite-plugin-pwa, offline support (removed; web is desktop-only)
 - [x] Task 7 (issue 20): Code of conduct, safeguarding policy, policy acceptance
 - [x] Task 8 (issue 21): Data protection, /me/export, DELETE /me
 - [x] Task 9 (issue 22): Testing (backend API tests, frontend component tests, Playwright smoke test)
@@ -93,4 +94,41 @@
 - [ ] Policy version tracking
 - [ ] Data retention period for anonymization
 - [ ] Guardian consent email settings
+
+## Messaging (issue 26)
+
+### Feature flags
+- `MessagingEnabled`: on by default in development, off in production (`MESSAGING_ENABLED` env var). Gates all messaging endpoints.
+- `GuardianCanViewMessages`: default true. Controls whether guardians have read-only view of mentee conversations.
+
+### Data model
+- `conversations` table: id UUID PK, mentorship_id UUID FK (unique), created_at, updated_at. One conversation per mentorship.
+- `messages` table: id UUID PK, conversation_id UUID FK, sender_id UUID FK → users.id, body TEXT, read_at, hidden_at, created_at. Soft-hide via `hidden_at` for moderation.
+- Indexes on `conversations(mentorship_id)`, `messages(conversation_id, created_at DESC)`, `messages(sender_id)`.
+
+### Authorization & safety
+- Only the two participants in an active mentorship (`status = 'active'`, `deleted_at IS NULL`) can read/write messages.
+- Conversation closes when mentorship is paused/completed/blocked/deleted.
+- Contact details (phone, email, URLs) stripped from message bodies and replaced with `[contact details removed]`.
+- Admin flag raised when contact details are hidden in an under-18 conversation.
+- Message reporting endpoint flags messages for admin review.
+
+### Frontend
+- `/messages` conversation list page; `/messages/:conversationId` chat page.
+- TanStack Query polling (3s refetch interval) for new messages.
+- Messages distinguish sender vs recipient visually.
+
+## Checklist: Existing vs Missing (issues 26-35)
+
+### Already implemented (issue 26)
+- [x] Migration 017: conversations + messages tables + indexes
+- [x] Config: MessagingEnabled, GuardianCanViewMessages flags
+- [x] DB queries: GetOrCreateConversation, ListConversations, GetConversation, ListMessages, CreateMessage, MarkMessagesRead, GetMessage, GetActiveMentorshipBetweenUsers, GetGuardianIDForMentee, IsGuardianOf, InsertOutboxNotification, GetUserByIDForDob
+- [x] Backend service: messages.go with ListConversations (incl. guardian read-only view), CreateConversation, ListMessages (+ MarkMessagesRead read receipts), CreateMessage (+ outbox new_message notifications + under-18 contact-detail admin flag), ReportMessage (+ outbox message_reported flag) handlers + permission enforcement + contact-detail hiding
+- [x] Routes: GET/POST /api/v1/messages, GET/POST /api/v1/messages/{id}/messages, POST /api/v1/messages/{id}/messages/{messageId}/report (auth required, gated by MessagingEnabled; ?mentee_id for guardian read-only view)
+- [x] Frontend: types/messaging.ts, services/messaging.ts, MessagesPage, ChatPage, SafeChatTips component, App.tsx routes, Layout nav link
+- [x] Tests: api/internal/messages/messages_test.go (hideContactDetails, isUnder18Dob); web/src/components/ui/safe-chat-tips.test.tsx
+
+### Missing - to implement in issues 27-35
+- [ ] DECISIONS.md entries for remaining issues 27-35
 

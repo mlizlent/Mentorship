@@ -21,12 +21,15 @@ type Config struct {
 	Environment     string
 	MentorCapacity  int
 	MatchingWeights MatchingWeights
-	SMTPHost        string
-	SMTPPort        int
-	SMTPUser        string
-	SMTPPassword    string
-	SMTPFrom        string
-	FrontendURL     string
+	SMTPHost     string
+	SMTPPort     int
+	SMTPUser     string
+	SMTPPassword string
+	SMTPFrom     string
+	FrontendURL  string
+	// Feature flags
+	MessagingEnabled        bool
+	GuardianCanViewMessages bool
 }
 
 type MatchingWeights struct {
@@ -64,6 +67,9 @@ func Load() (*Config, error) {
 		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
 		SMTPFrom:     getEnv("SMTP_FROM", "noreply@malkia.local"),
 		FrontendURL:  getEnv("FRONTEND_URL", "http://localhost:5173"),
+		// Feature flags: default on in development, off in production.
+		MessagingEnabled:        getEnvBool("MESSAGING_ENABLED", getEnv("ENVIRONMENT", "development") != "production"),
+		GuardianCanViewMessages: getEnvBool("GUARDIAN_CAN_VIEW_MESSAGES", true),
 	}
 
 	return cfg, nil
@@ -99,4 +105,16 @@ func getEnvDuration(key string, def time.Duration) time.Duration {
 func osLookup(key string) (string, bool) {
 	v, ok := os.LookupEnv(key)
 	return v, ok
+}
+
+func getEnvBool(key string, def bool) bool {
+	if v, ok := osLookup(key); ok && v != "" {
+		switch v {
+		case "1", "true", "TRUE", "True", "yes", "YES", "Yes", "on", "ON":
+			return true
+		case "0", "false", "FALSE", "False", "no", "NO", "No", "off", "OFF":
+			return false
+		}
+	}
+	return def
 }

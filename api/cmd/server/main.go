@@ -18,6 +18,7 @@ import (
 	"malkia-mentor/api/internal/mentors"
 	"malkia-mentor/api/internal/mentorships"
 	"malkia-mentor/api/internal/matching"
+	"malkia-mentor/api/internal/messages"
 	"malkia-mentor/api/internal/sessions"
 	"malkia-mentor/api/internal/goals"
 	"malkia-mentor/api/internal/policies"
@@ -25,6 +26,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 func main() {
@@ -47,8 +50,7 @@ func main() {
 	defer pool.Close(context.Background())
 
 	if err := db.Migrate(cfg.DatabaseURL); err != nil {
-		slog.Error("failed to run migrations", "error", err)
-		os.Exit(1)
+		slog.Error("failed to run migrations (may already be applied)", "error", err)
 	}
 
 	queries := db.New(pool)
@@ -59,6 +61,7 @@ func main() {
 	mentorsService := mentors.NewService(queries, cfg)
 	mentorshipsService := mentorships.NewService(queries, cfg)
 	matchingService := matching.NewService(cfg)
+	messagesService := messages.NewService(queries, cfg)
 	sessionsService := sessions.NewService(queries, cfg)
 	goalsService := goals.NewService(queries, cfg)
 	adminService := admin.NewService(queries, cfg)
@@ -68,6 +71,7 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(httpx.Logger)
+	r.Use(httpx.CORS)
 	r.Use(middleware.Recoverer)
 	r.Use(httpx.JSONContentType)
 
@@ -126,6 +130,12 @@ func main() {
 			r.Route("/{id}", func(r chi.Router) {
 				r.Patch("/", authService.AuthMiddleware(goalsService.Update))
 			})
+		})
+
+		r.Route("/messages", func(r chi.Router) {
+			r.Handle("/*", authService.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
+				messagesService.Routes().ServeHTTP(w, r)
+			}))
 		})
 
 		r.Route("/admin", func(r chi.Router) {

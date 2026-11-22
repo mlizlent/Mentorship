@@ -8,13 +8,15 @@ import (
 )
 
 func (q *Queries) CreateUser(ctx context.Context, id, email, passwordHash, role, fullName string, dob *string, county, language string) (*User, error) {
-	var newID string
+	var newID, newEmail, newPasswordHash, newRole, newFullName, newCounty, newLanguage, newStatus string
+	var newDOB interface{}
+	var newCreatedAt, newUpdatedAt interface{}
 	err := q.conn.QueryRow(ctx, `
 		INSERT INTO users (id, email, password_hash, role, full_name, date_of_birth, county, language)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id, email, password_hash, role, full_name, date_of_birth, county, language, status, created_at, updated_at
 	`, id, email, passwordHash, role, fullName, dob, county, language).Scan(
-		&newID, &email, &passwordHash, &role, &fullName, &dob, &county, &language,
+		&newID, &newEmail, &newPasswordHash, &newRole, &newFullName, &newDOB, &newCounty, &newLanguage, &newStatus, &newCreatedAt, &newUpdatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -680,6 +682,288 @@ func (q *Queries) ListConsentEvents(ctx context.Context, menteeID string, limit 
 		events = append(events, &e)
 	}
 	return events, nil
+}
+
+// Message queries
+
+type Conversation struct {
+	ID             string     `db:"id"`
+	MentorshipID   string     `db:"mentorship_id"`
+	MentorID       string     `db:"mentor_id"`
+	MenteeID       string     `db:"mentee_id"`
+	OtherUserID    string     `db:"other_user_id"`
+	OtherFullName  string     `db:"other_full_name"`
+	OtherRole      string     `db:"other_role"`
+	LastMessage    string     `db:"last_message"`
+	LastMessageAt  *time.Time `db:"last_message_at"`
+	UnreadCount    int        `db:"unread_count"`
+	CreatedAt      time.Time  `db:"created_at"`
+	UpdatedAt      time.Time  `db:"updated_at"`
+}
+
+func (q *Queries) GetOrCreateConversation(ctx context.Context, mentorshipID, userID string) (string, error) {
+	// Verify the user is a participant in the mentorship and it is not deleted.
+	var role string
+	err := q.conn.QueryRow(ctx, `
+		SELECT CASE WHEN mentor_id = $1 THEN 'mentor' WHEN mentee_id = $1 THEN 'mentee' END
+		FROM mentorships
+		WHERE id = $2 AND deleted_at IS NULL
+	`, userID, mentorshipID).Scan(&role)
+	if err != nil {
+		return "", err
+	}
+	if role == "" {
+		return "", fmt.Errorf("user is not a participant in mentorship %s", mentorshipID)
+	}
+
+	var conversationID string
+	err = q.conn.QueryRow(ctx, `
+		INSERT INTO conversations (mentorship_id)
+		VALUES ($1)
+		ON CONFLICT (mentorship_id) DO UPDATE SET updated_at = NOW()
+		RETURNING id
+	`, mentorshipID).Scan(&conversationID)
+	if err != nil {
+		return "", err
+	}
+	return conversationID, nil
+}
+
+func (q *Queries) ListConversations(ctx context.Context, userID string, limit int, cursor string) ([]*Conversation, error) {
+	args := []interface{}{userID}
+	argIdx := 2
+	where := `WHERE (m.mentor_id = $1 OR m.mentee_id = $1) AND m.deleted_at IS NULL`
+	if cursor != "" {
+		where += fmt.Sprintf(" AND c.updated_at < $%d", argIdx)
+		args = append(args, cursor)
+		argIdx++
+	}
+	args = append(args, limit)
+
+	query := fmt.Sprintf(`
+		SELECT c.id, c.mentorship_id, m.mentor_id, m.mentee_id,
+		       CASE WHEN m.mentor_id = $1 THEN m.mentee_id ELSE m.mentor_id END AS other_user_id,
+		       CASE WHEN m.mentor_id = $1 THEN u2.full_name ELSE u1.full_name END AS other_full_name,
+		       CASE WHEN m.mentor_id = $1 THEN u2.role ELSE u1.role END AS other_role,
+		       lm.body AS last_message,
+		       lm.created_at AS last_message_at,
+		       (SELECT COUNT(*) FROM messages msg
+		        WHERE msg.conversation_id = c.id
+		          AND msg.sender_id <> $1
+		          AND msg.read_at IS NULL) AS unread_count,
+		       c.created_at, c.updated_at
+		FROM conversations c
+		JOIN mentorships m ON m.id = c.mentorship_id
+		JOIN users u1 ON u1.id = m.mentor_id AND u1.deleted_at IS NULL
+		JOIN users u2 ON u2.id = m.mentee_id AND u2.deleted_at IS NULL
+		LEFT JOIN LATERAL (
+			SELECT body, created_at FROM messages msg
+			WHERE msg.conversation_id = c.id
+			ORDER BY created_at DESC LIMIT 1
+		) lm ON true
+		%s
+		ORDER BY c.updated_at DESC
+		LIMIT $%d
+	`, where, argIdx)
+
+	rows, err := q.conn.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var conversations []*Conversation
+	for rows.Next() {
+		var c Conversation
+		if err := rows.Scan(
+			&c.ID, &c.MentorshipID, &c.MentorID, &c.MenteeID,
+			&c.OtherUserID, &c.OtherFullName, &c.OtherRole,
+			&c.LastMessage, &c.LastMessageAt,
+			&c.UnreadCount, &c.CreatedAt, &c.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		conversations = append(conversations, &c)
+	}
+	return conversations, nil
+}
+
+func (q *Queries) GetConversation(ctx context.Context, conversationID, userID string) (*Conversation, error) {
+	var c Conversation
+	err := q.conn.QueryRow(ctx, `
+		SELECT c.id, c.mentorship_id, m.mentor_id, m.mentee_id,
+		       CASE WHEN m.mentor_id = $2 THEN m.mentee_id ELSE m.mentor_id END AS other_user_id,
+		       CASE WHEN m.mentor_id = $2 THEN u2.full_name ELSE u1.full_name END AS other_full_name,
+		       CASE WHEN m.mentor_id = $2 THEN u2.role ELSE u1.role END AS other_role,
+		       c.created_at, c.updated_at
+		FROM conversations c
+		JOIN mentorships m ON m.id = c.mentorship_id
+		JOIN users u1 ON u1.id = m.mentor_id AND u1.deleted_at IS NULL
+		JOIN users u2 ON u2.id = m.mentee_id AND u2.deleted_at IS NULL
+		WHERE c.id = $1 AND (m.mentor_id = $2 OR m.mentee_id = $2) AND m.deleted_at IS NULL
+	`, conversationID, userID).Scan(
+		&c.ID, &c.MentorshipID, &c.MentorID, &c.MenteeID,
+		&c.OtherUserID, &c.OtherFullName, &c.OtherRole,
+		&c.CreatedAt, &c.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
+type Message struct {
+	ID         string     `db:"id"`
+	ConversationID string   `db:"conversation_id"`
+	SenderID   string     `db:"sender_id"`
+	Body       string     `db:"body"`
+	ReadAt     *time.Time `db:"read_at"`
+	HiddenAt   *time.Time `db:"hidden_at"`
+	CreatedAt  time.Time  `db:"created_at"`
+}
+
+func (q *Queries) ListMessages(ctx context.Context, conversationID, userID string, limit int, cursor string) ([]*Message, error) {
+	// Verify access first.
+	_, err := q.GetConversation(ctx, conversationID, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	args := []interface{}{conversationID}
+	argIdx := 2
+	where := `WHERE conversation_id = $1 AND hidden_at IS NULL`
+	if cursor != "" {
+		where += fmt.Sprintf(" AND created_at < $%d", argIdx)
+		args = append(args, cursor)
+		argIdx++
+	}
+	args = append(args, limit)
+
+	query := fmt.Sprintf(`
+		SELECT id, conversation_id, sender_id, body, read_at, hidden_at, created_at
+		FROM messages
+		%s
+		ORDER BY created_at DESC
+		LIMIT $%d
+	`, where, argIdx)
+
+	rows, err := q.conn.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var messages []*Message
+	for rows.Next() {
+		var msg Message
+		if err := rows.Scan(
+			&msg.ID, &msg.ConversationID, &msg.SenderID, &msg.Body,
+			&msg.ReadAt, &msg.HiddenAt, &msg.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		messages = append(messages, &msg)
+	}
+	return messages, nil
+}
+
+func (q *Queries) CreateMessage(ctx context.Context, conversationID, senderID, body string) (string, error) {
+	var id string
+	err := q.conn.QueryRow(ctx, `
+		INSERT INTO messages (conversation_id, sender_id, body)
+		VALUES ($1, $2, $3)
+		RETURNING id
+	`, conversationID, senderID, body).Scan(&id)
+	if err != nil {
+		return "", err
+	}
+	_, _ = q.conn.Exec(ctx, `
+		UPDATE conversations SET updated_at = NOW() WHERE id = $1
+	`, conversationID)
+	return id, nil
+}
+
+func (q *Queries) MarkMessagesRead(ctx context.Context, conversationID, userID string) error {
+	_, err := q.conn.Exec(ctx, `
+		UPDATE messages SET read_at = NOW()
+		WHERE conversation_id = $1 AND sender_id <> $2 AND read_at IS NULL
+	`, conversationID, userID)
+	return err
+}
+
+func (q *Queries) GetMessage(ctx context.Context, messageID string) (*Message, error) {
+	var msg Message
+	err := q.conn.QueryRow(ctx, `
+		SELECT id, conversation_id, sender_id, body, read_at, hidden_at, created_at
+		FROM messages WHERE id = $1
+	`, messageID).Scan(
+		&msg.ID, &msg.ConversationID, &msg.SenderID, &msg.Body,
+		&msg.ReadAt, &msg.HiddenAt, &msg.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &msg, nil
+}
+
+func (q *Queries) GetActiveMentorshipBetweenUsers(ctx context.Context, userID1, userID2 string) (string, error) {
+	var mentorshipID string
+	err := q.conn.QueryRow(ctx, `
+		SELECT id FROM mentorships
+		WHERE (mentor_id = $1 AND mentee_id = $2) OR (mentor_id = $2 AND mentee_id = $1)
+		  AND deleted_at IS NULL AND status = 'active'
+	`, userID1, userID2).Scan(&mentorshipID)
+	if err != nil {
+		return "", err
+	}
+	return mentorshipID, nil
+}
+
+func (q *Queries) GetGuardianIDForMentee(ctx context.Context, menteeID string) (string, error) {
+	var guardianID string
+	err := q.conn.QueryRow(ctx, `
+		SELECT g.user_id FROM guardians g
+		JOIN mentee_profiles mp ON mp.user_id = g.mentee_id
+		WHERE g.mentee_id = $1 AND g.consent_withdrawn_at IS NULL
+		LIMIT 1
+	`, menteeID).Scan(&guardianID)
+	if err != nil {
+		return "", err
+	}
+	return guardianID, nil
+}
+
+func (q *Queries) IsGuardianOf(ctx context.Context, guardianID, menteeID string) (bool, error) {
+	var exists bool
+	err := q.conn.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM guardians
+			WHERE user_id = $1 AND mentee_id = $2 AND consent_withdrawn_at IS NULL
+		)
+	`, guardianID, menteeID).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (q *Queries) InsertOutboxNotification(ctx context.Context, userID, ntype, payload string) error {
+	_, err := q.conn.Exec(ctx, `
+		INSERT INTO notifications_outbox (user_id, type, payload)
+		VALUES ($1, $2, $3)
+	`, userID, ntype, payload)
+	return err
+}
+
+func (q *Queries) GetUserByIDForDob(ctx context.Context, id string) (*time.Time, error) {
+	var dob *time.Time
+	err := q.conn.QueryRow(ctx, `
+		SELECT date_of_birth FROM users WHERE id = $1 AND deleted_at IS NULL
+	`, id).Scan(&dob)
+	if err != nil {
+		return nil, err
+	}
+	return dob, nil
 }
 
 var _ = fmt.Sprintf

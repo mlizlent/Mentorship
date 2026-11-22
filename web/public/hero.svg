@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="Two women at a desk looking at a laptop under a golden crown">
+  <defs>
+    <clipPath id="frame"><rect width="1600" height="900"/></clipPath>
+  </defs>
+  <g clip-path="url(#frame)" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <!-- background -->
+    <rect width="1600" height="900" fill="#F3EEFF"/>
+    <g transform="translate(-290 0)"><circle cx="1130" cy="470" r="400" fill="#E6DBFF"/>
+    <circle cx="1130" cy="470" r="270" fill="#D9C8FF"/>
+    <circle cx="1440" cy="170" r="70" fill="#C4B5FD"/>
+    <circle cx="300" cy="760" r="120" fill="#E6DBFF"/>
+    <!-- dot grid -->
+    <g fill="#B79CF5">
+      <g id="row"><circle cx="560" cy="110" r="4"/><circle cx="590" cy="110" r="4"/><circle cx="620" cy="110" r="4"/><circle cx="650" cy="110" r="4"/><circle cx="680" cy="110" r="4"/></g>
+      <use href="#row" y="30"/><use href="#row" y="60"/><use href="#row" y="90"/>
+    </g>
+
+    <!-- floor / desk -->
+    <rect x="-600" y="780" width="2800" height="120" fill="#E6DBFF"/>
+    <rect x="640" y="655" width="900" height="34" rx="12" fill="#5B21B6"/>
+    <rect x="690" y="689" width="22" height="130" fill="#4C1D95"/>
+    <rect x="1470" y="689" width="22" height="130" fill="#4C1D95"/>
+
+    <!-- MENTEE (right) -->
+    <g>
+      <!-- hair back -->
+      <circle cx="1245" cy="370" r="78" fill="#1F1535"/>
+      <circle cx="1185" cy="400" r="30" fill="#1F1535"/>
+      <circle cx="1305" cy="400" r="30" fill="#1F1535"/>
+      <!-- body: hoodie -->
+      <path d="M1110 670 C1110 548 1160 490 1245 490 C1330 490 1380 548 1380 670 Z" fill="#4C1D95"/>
+      <!-- neck -->
+      <rect x="1227" y="438" width="36" height="60" rx="14" fill="#A06A42"/>
+      <!-- hood collar -->
+      <path d="M1190 500 C1210 530 1280 530 1300 500 C1290 485 1200 485 1190 500 Z" fill="#3B1585"/>
+      <!-- head -->
+      <ellipse cx="1245" cy="405" rx="50" ry="58" fill="#A06A42"/>
+      <!-- hair front -->
+      <path d="M1195 392 C1198 342 1292 342 1295 392 C1275 366 1215 366 1195 392 Z" fill="#1F1535"/>
+      <!-- ears + earrings -->
+      <circle cx="1195" cy="412" r="9" fill="#A06A42"/>
+      <circle cx="1295" cy="412" r="9" fill="#A06A42"/>
+      <circle cx="1195" cy="434" r="5" fill="#F5B94A"/>
+      <circle cx="1295" cy="434" r="5" fill="#F5B94A"/>
+      <!-- cheeks + smile -->
+      <circle cx="1222" cy="428" r="7" fill="#C98862" opacity="0.6"/>
+      <circle cx="1268" cy="428" r="7" fill="#C98862" opacity="0.6"/>
+      <path d="M1230 436 Q1245 448 1260 436" fill="none" stroke="#5A3420" stroke-width="3" stroke-linecap="round"/>
+      <path d="M1222 408 Q1229 403 1236 408 M1254 408 Q1261 403 1268 408" fill="none" stroke="#5A3420" stroke-width="3" stroke-linecap="round"/>
+    </g>
+
+    <!-- MENTOR (left) -->
+    <g>
+      <!-- body: blazer -->
+      <path d="M770 670 C770 540 825 478 905 478 C985 478 1040 540 1040 670 Z" fill="#7C3AED"/>
+      <!-- inner top -->
+      <path d="M868 484 L905 560 L942 484 C930 476 880 476 868 484 Z" fill="#F3EEFF"/>
+      <!-- lapels -->
+      <path d="M868 484 L905 560 L880 600 L840 500 Z" fill="#6D28D9"/>
+      <path d="M942 484 L905 560 L930 600 L970 500 Z" fill="#6D28D9"/>
+      <!-- neck -->
+      <rect x="887" y="432" width="36" height="58" rx="14" fill="#6F4226"/>
+      <!-- head -->
+      <ellipse cx="905" cy="398" rx="50" ry="58" fill="#6F4226"/>
+      <!-- headwrap -->
+      <path d="M853 388 C853 326 957 326 957 388 C940 360 870 360 853 388 Z" fill="#F5B94A"/>
+      <ellipse cx="905" cy="334" rx="46" ry="26" fill="#F5B94A"/>
+      <path d="M868 338 Q905 312 942 338" fill="none" stroke="#E09A2B" stroke-width="5" stroke-linecap="round"/>
+      <path d="M880 352 Q905 332 930 352" fill="none" stroke="#E09A2B" stroke-width="4" stroke-linecap="round"/>
+      <!-- ears + earrings -->
+      <circle cx="855" cy="406" r="9" fill="#6F4226"/>
+      <circle cx="955" cy="406" r="9" fill="#6F4226"/>
+      <circle cx="855" cy="432" r="7" fill="#F5B94A"/>
+      <circle cx="955" cy="432" r="7" fill="#F5B94A"/>
+      <!-- cheeks + smile -->
+      <circle cx="882" cy="422" r="7" fill="#9A6240" opacity="0.7"/>
+      <circle cx="928" cy="422" r="7" fill="#9A6240" opacity="0.7"/>
+      <path d="M890 430 Q905 442 920 430" fill="none" stroke="#3E2314" stroke-width="3" stroke-linecap="round"/>
+      <path d="M882 402 Q889 397 896 402 M914 402 Q921 397 928 402" fill="none" stroke="#3E2314" stroke-width="3" stroke-linecap="round"/>
+    </g>
+
+    <!-- laptop (lid faces viewer) -->
+    <rect x="985" y="530" width="200" height="124" rx="10" fill="#C4B5FD"/>
+    <rect x="985" y="530" width="200" height="124" rx="10" fill="none" stroke="#8B5CF6" stroke-width="3"/>
+    <path d="M1085 566 l8 14 l14 -12 l-4 26 h-36 l-4 -26 l14 12 z" fill="#F5B94A"/>
+    <path d="M965 654 H1205 L1195 668 H975 Z" fill="#8B5CF6"/>
+
+    <!-- mug -->
+    <rect x="720" y="618" width="34" height="38" rx="6" fill="#8B5CF6"/>
+    <path d="M754 626 q16 2 0 20" fill="none" stroke="#8B5CF6" stroke-width="5"/>
+    <rect x="720" y="618" width="34" height="9" rx="4" fill="#C4B5FD"/><path d="M730 600 q-6 -10 0 -18 M742 602 q-6 -10 0 -18" fill="none" stroke="#B79CF5" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- plant -->
+    <rect x="1440" y="618" width="46" height="37" rx="6" fill="#F5B94A"/>
+    <ellipse cx="1452" cy="590" rx="11" ry="32" fill="#2F9E7B" transform="rotate(-25 1452 590)"/>
+    <ellipse cx="1476" cy="586" rx="11" ry="34" fill="#3DB68F" transform="rotate(20 1476 586)"/>
+    <ellipse cx="1464" cy="574" rx="10" ry="30" fill="#2F9E7B"/>
+
+    <!-- connection arc + crown -->
+    <path d="M905 300 Q1075 150 1245 300" fill="none" stroke="#7C3AED" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"/>
+    <g transform="translate(1075 218)">
+      <path d="M-62 36 L-72 -22 L-34 8 L0 -34 L34 8 L72 -22 L62 36 Z" fill="#F5B94A"/>
+      <rect x="-62" y="36" width="124" height="14" rx="6" fill="#E09A2B"/>
+      <circle cx="-72" cy="-26" r="8" fill="#F5B94A"/>
+      <circle cx="0" cy="-40" r="9" fill="#F5B94A"/>
+      <circle cx="72" cy="-26" r="8" fill="#F5B94A"/>
+      <circle cx="-30" cy="26" r="5" fill="#7C3AED"/>
+      <circle cx="0" cy="26" r="5" fill="#7C3AED"/>
+      <circle cx="30" cy="26" r="5" fill="#7C3AED"/>
+    </g>
+    <!-- sparkles -->
+    <g stroke="#7C3AED" stroke-width="4" stroke-linecap="round">
+      <path d="M980 150 v26 M967 163 h26"/>
+      <path d="M1185 120 v20 M1175 130 h20"/>
+    </g>
+
+    </g></g>
+</svg>

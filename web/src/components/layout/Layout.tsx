@@ -1,17 +1,38 @@
 import { Outlet, useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { apiClient } from '@/services/api'
 
 export default function Layout() {
   const navigate = useNavigate()
+  const [checkingAuth, setCheckingAuth] = useState(true)
 
   useEffect(() => {
-    const token = document.cookie
-      .split('; ')
-      .find((row) => row.startsWith('access_token='))
-    if (!token) {
-      navigate('/login')
+    let cancelled = false
+
+    async function checkAuth() {
+      try {
+        await apiClient.get('/me')
+      } catch {
+        if (!cancelled) {
+          navigate('/login')
+        }
+        return
+      }
+      if (!cancelled) {
+        setCheckingAuth(false)
+      }
+    }
+
+    checkAuth()
+
+    return () => {
+      cancelled = true
     }
   }, [navigate])
+
+  if (checkingAuth) {
+    return null
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -37,10 +58,16 @@ export default function Layout() {
             <a href="/mentorships" className="hover:text-primary-300 transition-colors">
               Mentorships
             </a>
+            <a href="/messages" className="hover:text-primary-300 transition-colors">
+              Messages
+            </a>
             <button
-              onClick={() => {
-                document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-                document.cookie = 'refresh_token=; path=/auth/refresh; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+              onClick={async () => {
+                try {
+                  await apiClient.post('/auth/logout', {})
+                } catch {
+                  // ignore logout errors
+                }
                 navigate('/login')
               }}
               className="hover:text-primary-300 transition-colors"
