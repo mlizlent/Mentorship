@@ -17,55 +17,41 @@
     color-scheme: dark;
   }
   .dark body {
-    @apply bg-neutral-900 text-neutral-100;
+    background-color: #18181B;
+    color: #F2F2F4;
   }
   .dark .bg-white {
-    @apply bg-neutral-800;
+    background-color: #27272A;
   }
-  .dark .bg-neutral-50 {
-    @apply bg-neutral-900;
-  }
+  .dark .bg-neutral-50,
   .dark .bg-neutral-100 {
-    @apply bg-neutral-800;
+    background-color: #27272A;
   }
   .dark .border-neutral-300 {
-    @apply border-neutral-700;
+    border-color: #52525B;
   }
   .dark .text-ink {
-    @apply text-neutral-100;
+    color: #F2F2F4;
   }
-  .dark .text-neutral-600 {
-    @apply text-neutral-400;
-  }
-  .dark .text-neutral-500 {
-    @apply text-neutral-400;
-  }
+  .dark .text-neutral-600,
+  .dark .text-neutral-500,
   .dark .text-neutral-400 {
-    @apply text-neutral-500;
+    color: #A1A1AA;
   }
-  .dark .text-primary-600 {
-    @apply text-primary-400;
-  }
+  .dark .text-primary-600,
   .dark .text-primary-300 {
-    @apply text-primary-400;
+    color: #EBC2FF;
   }
-  .dark .hover\:bg-neutral-100:hover {
-    @apply bg-neutral-800;
-  }
-  .dark .hover\:bg-neutral-200:hover {
-    @apply bg-neutral-700;
-  }
+  .dark .hover\:bg-neutral-100:hover,
+  .dark .hover\:bg-neutral-200:hover,
   .dark .bg-neutral-200 {
-    @apply bg-neutral-800;
-  }
-  .dark .bg-primary-600 {
-    @apply bg-primary-600;
+    background-color: #3F3F46;
   }
   .dark .shadow-sm {
-    @apply shadow-none ring-1 ring-neutral-700;
+    box-shadow: none;
+    border: 1px solid #52525B;
   }
-  .dark .placeholder-text-neutral-400::placeholder,
   .dark ::placeholder {
-    @apply text-neutral-500;
+    color: #71717A;
   }
 }
