@@ -15,11 +15,7 @@ type User = {
   language?: string
   role?: string
   status?: string
-}
-
-type Block = {
-  blocked_id: string
-  created_at: string
+  avatar_url?: string
 }
 
 export default function ProfilePage() {
@@ -37,9 +33,6 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState('')
   const [county, setCounty] = useState('')
   const [language, setLanguage] = useState('en')
-  const [reportTargetId, setReportTargetId] = useState('')
-  const [reportReason, setReportReason] = useState('')
-  const [blockTargetId, setBlockTargetId] = useState('')
 
   useEffect(() => {
     if (!user) return
@@ -63,56 +56,19 @@ export default function ProfilePage() {
     onError: () => toast.error('Could not update your profile'),
   })
 
-  const reportUser = useMutation({
-    mutationFn: async () => {
-      await apiClient.post('/me/reports', {
-        target_user_id: reportTargetId.trim(),
-        reason: reportReason.trim(),
+  const uploadAvatar = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData()
+      formData.append('avatar', file)
+      await apiClient.post('/me/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       })
     },
     onSuccess: () => {
-      toast.success('Report submitted')
-      setReportTargetId('')
-      setReportReason('')
+      toast.success('Profile picture updated')
+      void queryClient.invalidateQueries({ queryKey: ['me'] })
     },
-    onError: () => toast.error('Could not submit report'),
-  })
-
-  const {
-    data: blocksData,
-    refetch: refetchBlocks,
-    isLoading: blocksLoading,
-  } = useQuery<{ data: Block[] }>({
-    queryKey: ['blocks'],
-    queryFn: async () => {
-      const res = await apiClient.get<{ data: Block[] }>('/me/blocks')
-      return res.data
-    },
-  })
-
-  const blocks = blocksData?.data ?? []
-
-  const blockUser = useMutation({
-    mutationFn: async () => {
-      await apiClient.post('/me/blocks', { blocked_id: blockTargetId.trim() })
-    },
-    onSuccess: () => {
-      toast.success('User blocked')
-      setBlockTargetId('')
-      void refetchBlocks()
-    },
-    onError: () => toast.error('Could not block user'),
-  })
-
-  const unblockUser = useMutation({
-    mutationFn: async (blockedId: string) => {
-      await apiClient.delete(`/me/blocks/${blockedId}`)
-    },
-    onSuccess: () => {
-      toast.success('User unblocked')
-      void refetchBlocks()
-    },
-    onError: () => toast.error('Could not unblock user'),
+    onError: () => toast.error('Could not upload profile picture'),
   })
 
   const initials =
@@ -128,7 +84,7 @@ export default function ProfilePage() {
       <div>
         <h1 className="font-headline-md text-headline-md text-ink font-bold">My Profile</h1>
         <p className="font-body-md text-body-md text-on-surface-variant mt-1">
-          Manage your personal information, safety preferences, and blocked users.
+          Manage your personal information and safety preferences.
         </p>
       </div>
 
@@ -136,11 +92,19 @@ export default function ProfilePage() {
         <div className="lg:col-span-2 space-y-6">
           <Card className="p-6 rounded-2xl bg-surface-container-lowest border border-outline/40 shadow-sm">
             <div className="flex items-center gap-4 mb-6">
-              <InitialsAvatar
-                initials={initials}
-                accent="bg-primary/10 text-primary"
-                className="w-16 h-16 rounded-2xl font-bold text-xl"
-              />
+              {user?.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={`${user.full_name}'s avatar`}
+                  className="w-16 h-16 rounded-2xl object-cover border border-outline/40"
+                />
+              ) : (
+                <InitialsAvatar
+                  initials={initials}
+                  accent="bg-primary/10 text-primary"
+                  className="w-16 h-16 rounded-2xl font-bold text-xl"
+                />
+              )}
               <div>
                 <h2 className="font-headline-sm text-headline-sm text-ink font-bold">
                   {user?.full_name || 'Your profile'}
@@ -181,6 +145,30 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-ink mb-1">Profile Picture</label>
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                id="avatar-upload"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) uploadAvatar.mutate(file)
+                }}
+                disabled={uploadAvatar.isPending}
+              />
+              <label
+                htmlFor="avatar-upload"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-outline-variant bg-surface-input text-ink rounded-md cursor-pointer hover:bg-surface-container-low transition-colors"
+              >
+                <span className="font-body-sm text-body-sm">
+                  {uploadAvatar.isPending ? 'Uploading...' : 'Choose File'}
+                </span>
+              </label>
+              <p className="text-xs text-on-surface-variant mt-1">JPG or PNG, max 2MB</p>
+            </div>
+
             <Button
               onClick={() => updateProfile.mutate()}
               disabled={updateProfile.isPending}
@@ -188,124 +176,6 @@ export default function ProfilePage() {
             >
               {updateProfile.isPending ? 'Saving...' : 'Save Changes'}
             </Button>
-          </Card>
-
-          <Card className="p-6 rounded-2xl bg-surface-container-lowest border border-outline/40 shadow-sm">
-            <h2 className="font-headline-sm text-headline-sm text-ink font-bold mb-2">Safety &amp; Support</h2>
-            <p className="text-sm text-on-surface-variant mb-4">
-              Block users or report behavior that violates our community code of conduct.
-            </p>
-
-            <form
-              className="space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault()
-                reportUser.mutate()
-              }}
-            >
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1">User ID to report</label>
-                <Input
-                  required
-                  value={reportTargetId}
-                  onChange={(e) => setReportTargetId(e.target.value)}
-                  placeholder="User UUID"
-                  className="w-full px-3 py-2 border border-outline-variant bg-surface-input text-ink rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1">Reason</label>
-                <textarea
-                  required
-                  minLength={5}
-                  rows={3}
-                  value={reportReason}
-                  onChange={(e) => setReportReason(e.target.value)}
-                  placeholder="Describe the incident..."
-                  className="w-full px-3 py-2 border border-outline-variant bg-surface-input text-ink rounded-md"
-                />
-              </div>
-              <Button type="submit" disabled={reportUser.isPending}>
-                {reportUser.isPending ? 'Submitting...' : 'Submit Report'}
-              </Button>
-            </form>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card className="p-6 rounded-2xl bg-surface-container-lowest border border-outline/40 shadow-sm">
-            <h3 className="font-headline-xs text-headline-xs text-ink font-bold mb-3">Account Status</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-on-surface-variant">Role</span>
-                <span className="text-ink capitalize">{user?.role || '—'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-on-surface-variant">Status</span>
-                <span className="text-ink capitalize">{user?.status || 'active'}</span>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 rounded-2xl bg-surface-container-lowest border border-outline/40 shadow-sm">
-            <h3 className="font-headline-xs text-headline-xs text-ink font-bold mb-2">Blocked Users</h3>
-            <p className="text-xs text-on-surface-variant mb-3">
-              Blocked users cannot message or request mentorship from you.
-            </p>
-
-            <div className="space-y-3">
-              <div className="flex gap-2">
-                <Input
-                  value={blockTargetId}
-                  onChange={(e) => setBlockTargetId(e.target.value)}
-                  placeholder="User UUID"
-                  className="flex-1 min-w-0 px-3 py-2 border border-outline-variant bg-surface-input text-ink rounded-md text-sm"
-                />
-                <Button
-                  type="button"
-                  onClick={() => blockUser.mutate()}
-                  disabled={blockUser.isPending}
-                  className="shrink-0"
-                >
-                  Block
-                </Button>
-              </div>
-
-              {blocksLoading ? (
-                <p className="text-xs text-on-surface-variant">Loading blocked users...</p>
-              ) : blocks.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-outline-variant/60 bg-surface-container-low p-4 text-center">
-                  <p className="text-sm text-on-surface-variant">No users blocked.</p>
-                  <p className="text-xs text-on-surface-variant mt-1">
-                    Blocked users will appear here.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {blocks.map((block) => (
-                    <div
-                      key={block.blocked_id}
-                      className="flex items-center justify-between gap-2 rounded-xl bg-surface-container-low px-3 py-2"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-ink truncate">{block.blocked_id}</p>
-                        <p className="text-[11px] text-on-surface-variant">
-                          Blocked {new Date(block.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => unblockUser.mutate(block.blocked_id)}
-                        disabled={unblockUser.isPending}
-                        className="shrink-0 text-xs font-bold text-primary hover:underline"
-                      >
-                        Unblock
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </Card>
         </div>
       </div>

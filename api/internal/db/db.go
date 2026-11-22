@@ -61,6 +61,7 @@ type User struct {
 	County       string     `db:"county"`
 	Language     string     `db:"language"`
 	Status       string     `db:"status"`
+	AvatarURL    string     `db:"avatar_url"`
 	DeletedAt    *time.Time `db:"deleted_at"`
 	CreatedAt    time.Time  `db:"created_at"`
 	UpdatedAt    time.Time  `db:"updated_at"`

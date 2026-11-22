@@ -1,6 +1,7 @@
 package users
 
 import (
+	"encoding/base64"
 	"net/http"
 	"strings"
 	"time"
@@ -34,11 +35,7 @@ func NewService(queries *db.Queries, authSvc *auth.Service, cfg *config.Config) 
 	r.Post("/logout", s.Logout)
 	r.Get("/me", s.GetMe)
 	r.Put("/me", s.UpdateMe)
-	r.Route("/me/blocks", func(r chi.Router) {
-		r.Get("/", s.ListBlocks)
-		r.Post("/", s.CreateBlock)
-		r.Delete("/{id}", s.RemoveBlock)
-	})
+	r.Post("/me/avatar", s.UploadAvatar)
 	r.Post("/me/reports", s.CreateReport)
 	r.Get("/me/export", s.ExportMe)
 	r.Delete("/me", s.DeleteMe)
@@ -176,7 +173,7 @@ func (s *Service) Register(w http.ResponseWriter, r *http.Request) {
 		Secure:   s.cfg.Environment == "production",
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
-		MaxAge:   int(s.cfg.RefreshTokenTTL.Seconds()),
+		MaxAge:   int(s.cfg.AccessTokenTTL.Seconds()),
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
@@ -190,10 +187,11 @@ func (s *Service) Register(w http.ResponseWriter, r *http.Request) {
 
 	httpx.WriteJSON(w, http.StatusCreated, map[string]interface{}{
 		"user": map[string]interface{}{
-			"id":        userID.String(),
-			"email":     req.Email,
-			"role":      req.Role,
-			"full_name": req.FullName,
+			"id":         userID.String(),
+			"email":      req.Email,
+			"role":       req.Role,
+			"full_name":  req.FullName,
+			"avatar_url": "",
 		},
 	})
 }
@@ -249,7 +247,7 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
 		Secure:   s.cfg.Environment == "production",
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
-		MaxAge:   int(s.cfg.RefreshTokenTTL.Seconds()),
+		MaxAge:   int(s.cfg.AccessTokenTTL.Seconds()),
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
@@ -263,10 +261,11 @@ func (s *Service) Login(w http.ResponseWriter, r *http.Request) {
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"user": map[string]interface{}{
-			"id":        user.ID,
-			"email":     user.Email,
-			"role":      user.Role,
-			"full_name": user.FullName,
+			"id":         user.ID,
+			"email":      user.Email,
+			"role":       user.Role,
+			"full_name":  user.FullName,
+			"avatar_url": user.AvatarURL,
 		},
 	})
 }
@@ -336,7 +335,7 @@ func (s *Service) Refresh(w http.ResponseWriter, r *http.Request) {
 		Secure:   s.cfg.Environment == "production",
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
-		MaxAge:   int(s.cfg.RefreshTokenTTL.Seconds()),
+		MaxAge:   int(s.cfg.AccessTokenTTL.Seconds()),
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
@@ -350,10 +349,11 @@ func (s *Service) Refresh(w http.ResponseWriter, r *http.Request) {
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"user": map[string]interface{}{
-			"id":        user.ID,
-			"email":     user.Email,
-			"role":      user.Role,
-			"full_name": user.FullName,
+			"id":         user.ID,
+			"email":      user.Email,
+			"role":       user.Role,
+			"full_name":  user.FullName,
+			"avatar_url": user.AvatarURL,
 		},
 	})
 }
@@ -409,13 +409,14 @@ func (s *Service) GetMe(w http.ResponseWriter, r *http.Request) {
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"user": map[string]interface{}{
-			"id":        user.ID,
-			"email":     user.Email,
-			"role":      user.Role,
-			"full_name": user.FullName,
-			"county":    user.County,
-			"language":  user.Language,
-			"status":    user.Status,
+			"id":         user.ID,
+			"email":      user.Email,
+			"role":       user.Role,
+			"full_name":  user.FullName,
+			"county":     user.County,
+			"language":   user.Language,
+			"status":     user.Status,
+			"avatar_url": user.AvatarURL,
 		},
 	})
 }
@@ -456,109 +457,65 @@ func (s *Service) UpdateMe(w http.ResponseWriter, r *http.Request) {
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"user": map[string]interface{}{
-			"id":        user.ID,
-			"email":     user.Email,
-			"role":      user.Role,
-			"full_name": user.FullName,
-			"county":    user.County,
-			"language":  user.Language,
-			"status":    user.Status,
+			"id":         user.ID,
+			"email":      user.Email,
+			"role":       user.Role,
+			"full_name":  user.FullName,
+			"county":     user.County,
+			"language":   user.Language,
+			"status":     user.Status,
+			"avatar_url": user.AvatarURL,
 		},
 	})
 }
 
-type blockRequest struct {
-	BlockedID string `json:"blocked_id" validate:"required,uuid"`
-}
-
-func (s *Service) ListBlocks(w http.ResponseWriter, r *http.Request) {
+func (s *Service) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.UserIDFromContext(r.Context())
 	if !ok {
 		httpx.WriteError(w, "unauthorized", "authentication required", nil)
 		return
 	}
 
-	blocks, err := s.queries.ListBlocks(r.Context(), userID, 50)
+	err := r.ParseMultipartForm(2 << 20) // 2MB max
 	if err != nil {
-		httpx.WriteError(w, "internal", "could not list blocks", nil)
+		httpx.WriteError(w, "validation_failed", "file too large (max 2MB)", nil)
 		return
 	}
 
-	type blockResponse struct {
-		BlockedID string    `json:"blocked_id"`
-		CreatedAt time.Time `json:"created_at"`
+	file, header, err := r.FormFile("avatar")
+	if err != nil {
+		httpx.WriteError(w, "validation_failed", "avatar file required", nil)
+		return
 	}
-	var result []blockResponse
-	for _, b := range blocks {
-		result = append(result, blockResponse{
-			BlockedID: b.BlockedID,
-			CreatedAt: b.CreatedAt,
-		})
-	}
+	defer file.Close()
 
-	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"data": result,
-	})
-}
-
-func (s *Service) CreateBlock(w http.ResponseWriter, r *http.Request) {
-	userID, ok := auth.UserIDFromContext(r.Context())
-	if !ok {
-		httpx.WriteError(w, "unauthorized", "authentication required", nil)
+	// Validate file type
+	contentType := header.Header.Get("Content-Type")
+	if contentType != "image/jpeg" && contentType != "image/png" {
+		httpx.WriteError(w, "validation_failed", "only JPG and PNG images allowed", nil)
 		return
 	}
 
-	var req blockRequest
-	if err := httpx.DecodeJSON(r, &req); err != nil {
-		httpx.WriteError(w, "validation_failed", "invalid request body", nil)
-		return
-	}
-	if err := validate.Struct(&req); err != nil {
-		httpx.WriteError(w, "validation_failed", "validation failed", httpx.ValidationErrors(err))
-		return
-	}
-
-	if req.BlockedID == userID {
-		httpx.WriteError(w, "validation_failed", "cannot block yourself", nil)
+	// For now, we'll store the file in memory and return a data URL
+	// In production, you'd upload to S3 or similar and store the URL
+	buf := make([]byte, header.Size)
+	_, err = file.Read(buf)
+	if err != nil {
+		httpx.WriteError(w, "internal", "could not read file", nil)
 		return
 	}
 
-	if _, err := s.queries.GetUserByID(r.Context(), req.BlockedID); err != nil {
-		httpx.WriteError(w, "not_found", "user not found", nil)
-		return
-	}
+	// Convert to base64 data URL (simple approach for demo)
+	dataURL := "data:" + contentType + ";base64," + base64.StdEncoding.EncodeToString(buf)
 
-	if err := s.queries.CreateBlock(r.Context(), userID, req.BlockedID); err != nil {
-		httpx.WriteError(w, "internal", "could not block user", nil)
-		return
-	}
-
-	httpx.WriteJSON(w, http.StatusCreated, map[string]interface{}{
-		"status":  "blocked",
-		"blocked": req.BlockedID,
-	})
-}
-
-func (s *Service) RemoveBlock(w http.ResponseWriter, r *http.Request) {
-	userID, ok := auth.UserIDFromContext(r.Context())
-	if !ok {
-		httpx.WriteError(w, "unauthorized", "authentication required", nil)
-		return
-	}
-
-	blockedID := chi.URLParam(r, "id")
-	if blockedID == "" {
-		httpx.WriteError(w, "validation_failed", "blocked user id required", nil)
-		return
-	}
-
-	if err := s.queries.RemoveBlock(r.Context(), userID, blockedID); err != nil {
-		httpx.WriteError(w, "internal", "could not unblock user", nil)
+	// Update user avatar in database
+	if err := s.queries.UpdateUserAvatar(r.Context(), userID, dataURL); err != nil {
+		httpx.WriteError(w, "internal", "could not update avatar", nil)
 		return
 	}
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"status": "unblocked",
+		"avatar_url": dataURL,
 	})
 }
 
@@ -610,7 +567,6 @@ type exportData struct {
 	User             interface{} `json:"user"`
 	Mentorships      interface{} `json:"mentorships"`
 	Reports          interface{} `json:"reports"`
-	Blocks           interface{} `json:"blocks"`
 	PolicyAcceptance interface{} `json:"policy_acceptances"`
 }
 
@@ -632,11 +588,6 @@ func (s *Service) ExportMe(w http.ResponseWriter, r *http.Request) {
 		mentorships = nil
 	}
 
-	blocks, err := s.queries.ListBlocks(r.Context(), userID, 100)
-	if err != nil {
-		blocks = nil
-	}
-
 	export := exportData{
 		User: map[string]interface{}{
 			"id":        user.ID,
@@ -649,7 +600,6 @@ func (s *Service) ExportMe(w http.ResponseWriter, r *http.Request) {
 		},
 		Mentorships: mentorships,
 		Reports:     nil,
-		Blocks:      blocks,
 	}
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{

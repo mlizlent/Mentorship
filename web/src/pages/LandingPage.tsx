@@ -27,7 +27,6 @@ const navLinks = [
   { label: 'Home', to: '#home' },
   { label: 'Explore Mentors', to: '#mentors' },
   { label: 'How It Works', to: '#how-it-works' },
-  { label: 'Success Stories', to: '#' },
 ]
 
 const steps = [
@@ -104,7 +103,7 @@ export default function LandingPage() {
               className="flex items-center justify-center h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline-sm font-extrabold shadow-sm"
               aria-hidden="true"
             >
-              M
+              C
             </span>
             <div className="flex flex-col">
               <span className="font-headline-sm text-headline-sm text-primary leading-tight font-extrabold">

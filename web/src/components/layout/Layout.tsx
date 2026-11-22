@@ -80,7 +80,7 @@ export default function Layout() {
   }
 
   const displayName = me?.full_name || 'Mentee User'
-  const roleLine = [me?.role || 'Mentee', me?.county].filter(Boolean).join(' • ')
+  const roleLine = me?.county || ''
   const userInitials = getInitials(me?.full_name)
 
   const logout = async () => {
@@ -103,7 +103,7 @@ export default function Layout() {
                 aria-hidden="true"
                 className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline-sm font-extrabold shadow-sm"
               >
-                M
+                C
               </span>
               <div className="flex flex-col">
                 <span className="font-headline-sm text-headline-sm text-primary leading-tight font-extrabold">
@@ -131,9 +131,11 @@ export default function Layout() {
                 <span className="font-label-md text-label-md text-on-surface font-bold leading-tight">
                   {displayName}
                 </span>
-                <span className="font-label-sm text-label-sm text-on-surface-variant capitalize">
-                  {roleLine}
-                </span>
+                {roleLine && (
+                  <span className="font-label-sm text-label-sm text-on-surface-variant capitalize">
+                    {roleLine}
+                  </span>
+                )}
               </div>
             </Link>
 
