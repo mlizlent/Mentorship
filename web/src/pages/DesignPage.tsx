@@ -49,14 +49,13 @@ export default function DesignPage() {
           <Card className="p-4">
             <h3 className="font-semibold text-ink mb-2">Core tables</h3>
             <ul className="text-neutral-600 text-sm space-y-1 list-disc list-inside">
-              <li>users (id, email, role, full_name, date_of_birth, county, language, status)</li>
+              <li>users (id, email, role, full_name, date_of_birth, county, language, status, avatar_url)</li>
               <li>mentor_profiles (user_id, bio, expertise, years_experience, verified_at)</li>
               <li>mentee_profiles</li>
               <li>mentorships (mentor_id, mentee_id, status)</li>
               <li>sessions (mentorship_id, scheduled_at, duration_min)</li>
               <li>goals (mentorship_id, title, target_date, status)</li>
               <li>reports (reporter_id, target_user_id, reason, status)</li>
-              <li>user_blocks (blocker_id, blocked_id)</li>
               <li>admin_access_log</li>
               <li>notifications_outbox</li>
             </ul>
@@ -78,9 +77,7 @@ export default function DesignPage() {
             <ul className="text-neutral-600 text-sm space-y-1 list-disc list-inside">
               <li>GET /api/v1/me</li>
               <li>PUT /api/v1/me</li>
-              <li>GET /api/v1/me/blocks</li>
-              <li>POST /api/v1/me/blocks</li>
-              <li>DELETE /api/v1/me/blocks/:id</li>
+              <li>POST /api/v1/me/avatar</li>
               <li>POST /api/v1/me/reports</li>
             </ul>
           </Card>
@@ -102,9 +99,8 @@ export default function DesignPage() {
             <h3 className="font-semibold text-ink mb-2">Access control</h3>
             <ul className="text-neutral-600 text-sm space-y-1 list-disc list-inside">
               <li>Role-based admin middleware (loads role from DB)</li>
-              <li>Block list prevents interaction between users</li>
               <li>Admin access log records reads of personal data</li>
-              <li>Self-block and self-report are rejected</li>
+              <li>Self-report is rejected</li>
             </ul>
           </Card>
         </TabsContent>

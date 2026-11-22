@@ -86,9 +86,6 @@ func main() {
 		r.Route("/me", func(r chi.Router) {
 			r.Get("/", authService.AuthMiddleware(usersService.GetMe))
 			r.Put("/", authService.AuthMiddleware(usersService.UpdateMe))
-			r.Get("/blocks", authService.AuthMiddleware(usersService.ListBlocks))
-			r.Post("/blocks", authService.AuthMiddleware(usersService.CreateBlock))
-			r.Delete("/blocks/{id}", authService.AuthMiddleware(usersService.RemoveBlock))
 			r.Post("/reports", authService.AuthMiddleware(usersService.CreateReport))
 			r.Get("/export", authService.AuthMiddleware(usersService.ExportMe))
 			r.Delete("/", authService.AuthMiddleware(usersService.DeleteMe))
