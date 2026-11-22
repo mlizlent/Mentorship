@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main, feature/*]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: malkia
+          POSTGRES_PASSWORD: malkia
+          POSTGRES_DB: malkia
+        ports:
+          - "5432:5432"
+        options: >-
+          --health-cmd "pg_isready -U malkia -d malkia"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: Install golangci-lint
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - name: Install migrate
+        run: |
+          go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+      - name: Run migrations
+        run: make migrate
+        env:
+          DATABASE_URL: postgres://malkia:malkia@localhost:5432/malkia?sslmode=disable
+      - name: Run backend tests
+        working-directory: ./api
+        run: go test ./...
+        env:
+          DATABASE_URL: postgres://malkia:malkia@localhost:5432/malkia?sslmode=disable
+      - name: Run backend lint
+        working-directory: ./api
+        run: golangci-lint run ./...
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install web dependencies
+        working-directory: ./web
+        run: npm ci
+      - name: Run web lint
+        working-directory: ./web
+        run: npm run lint
+      - name: Run web type-check
+        working-directory: ./web
+        run: npm run type-check
+      - name: Run web tests
+        working-directory: ./web
+        run: npm test
