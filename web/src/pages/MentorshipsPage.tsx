@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
 import { apiClient } from '@/services/api'
 import { InitialsAvatar } from '@/components/ui/initials-avatar'
@@ -154,6 +154,8 @@ function EmptyPanel({
 export default function MentorshipsPage() {
   const [tab, setTab] = useState<TabKey>('goals')
   const [selectedId, setSelectedId] = useState('')
+  const [goalTitle, setGoalTitle] = useState('')
+  const [goalTargetDate, setGoalTargetDate] = useState('')
 
   const {
     data: mentorshipsRaw,
@@ -217,6 +219,63 @@ export default function MentorshipsPage() {
 
   const sessions = sessionsRaw?.data ?? []
   const goals = goalsRaw?.data ?? []
+
+  const { data: meData } = useQuery<{ user: { id: string; role: string } }>({
+    queryKey: ['me'],
+    queryFn: async () => {
+      const res = await apiClient.get<{ user: { id: string; role: string } }>('/me')
+      return res.data
+    },
+  })
+  const isMentor = meData?.user?.role === 'mentor'
+
+  const queryClient = useQueryClient()
+  const updateMentorship = useMutation({
+    mutationFn: async (status: string) => {
+      if (!selected?.id) throw new Error('No mentorship selected')
+      await apiClient.patch(`/mentorships/${selected.id}`, { status })
+    },
+    onSuccess: () => {
+      toast.success('Mentorship updated')
+      void queryClient.invalidateQueries({ queryKey: ['mentorships'] })
+      void refetch()
+    },
+    onError: () => toast.error('Could not update mentorship'),
+  })
+
+  const createGoal = useMutation({
+    mutationFn: async () => {
+      if (!selected?.id) throw new Error('No mentorship selected')
+      await apiClient.post(`/mentorships/${selected.id}/goals`, {
+        title: goalTitle.trim(),
+        target_date: goalTargetDate
+          ? new Date(goalTargetDate).toISOString()
+          : undefined,
+      })
+    },
+    onSuccess: () => {
+      toast.success('Goal added')
+      setGoalTitle('')
+      setGoalTargetDate('')
+      void queryClient.invalidateQueries({
+        queryKey: ['mentorship-goals', selected?.id],
+      })
+    },
+    onError: () => toast.error('Could not add goal'),
+  })
+
+  const updateGoal = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      await apiClient.patch(`/goals/${id}`, { status })
+    },
+    onSuccess: () => {
+      toast.success('Goal updated')
+      void queryClient.invalidateQueries({
+        queryKey: ['mentorship-goals', selected?.id],
+      })
+    },
+    onError: () => toast.error('Could not update goal'),
+  })
 
   const activeCount = mentorships.filter((m) => m.status === 'active').length
   const selectedMentor = selected
@@ -477,6 +536,93 @@ export default function MentorshipsPage() {
             </div>
           </div>
 
+          {selected && (
+            <div className="p-5 rounded-2xl bg-surface-container-lowest border border-outline/30 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase font-bold text-on-surface-variant tracking-wider">
+                    Manage Mentorship
+                  </p>
+                  <p className="text-sm font-bold text-ink capitalize mt-0.5">
+                    {selected.status}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {selected.status === 'requested' &&
+                    (isMentor ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => updateMentorship.mutate('active')}
+                          disabled={updateMentorship.isPending}
+                          className="px-4 py-2 rounded-full bg-primary text-white text-xs font-bold hover:bg-primary-700 transition-colors disabled:opacity-60"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateMentorship.mutate('declined')}
+                          disabled={updateMentorship.isPending}
+                          className="px-4 py-2 rounded-full border border-outline/40 text-xs font-bold text-on-surface hover:bg-surface-container transition-colors disabled:opacity-60"
+                        >
+                          Decline
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => updateMentorship.mutate('declined')}
+                        disabled={updateMentorship.isPending}
+                        className="px-4 py-2 rounded-full border border-outline/40 text-xs font-bold text-on-surface hover:bg-surface-container transition-colors disabled:opacity-60"
+                      >
+                        Cancel request
+                      </button>
+                    ))}
+                  {selected.status === 'active' && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => updateMentorship.mutate('paused')}
+                        disabled={updateMentorship.isPending}
+                        className="px-4 py-2 rounded-full border border-outline/40 text-xs font-bold text-on-surface hover:bg-surface-container transition-colors disabled:opacity-60"
+                      >
+                        Pause
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateMentorship.mutate('completed')}
+                        disabled={updateMentorship.isPending}
+                        className="px-4 py-2 rounded-full bg-primary text-white text-xs font-bold hover:bg-primary-700 transition-colors disabled:opacity-60"
+                      >
+                        Complete
+                      </button>
+                    </>
+                  )}
+                  {selected.status === 'paused' && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => updateMentorship.mutate('active')}
+                        disabled={updateMentorship.isPending}
+                        className="px-4 py-2 rounded-full bg-primary text-white text-xs font-bold hover:bg-primary-700 transition-colors disabled:opacity-60"
+                      >
+                        Resume
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateMentorship.mutate('completed')}
+                        disabled={updateMentorship.isPending}
+                        className="px-4 py-2 rounded-full border border-outline/40 text-xs font-bold text-on-surface hover:bg-surface-container transition-colors disabled:opacity-60"
+                      >
+                        Complete
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Tabs Container */}
           <div className="space-y-5">
             <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-surface-container-low border border-outline/30 max-w-xl">
@@ -499,6 +645,50 @@ export default function MentorshipsPage() {
               })}
             </div>
 
+            {tab === 'goals' && (
+              <div className="p-5 rounded-2xl bg-surface-container-lowest border border-outline/30 shadow-sm">
+                <form
+                  className="flex flex-col sm:flex-row gap-3 sm:items-end"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    createGoal.mutate()
+                  }}
+                >
+                  <div className="flex-1">
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">
+                      New goal
+                    </label>
+                    <input
+                      required
+                      minLength={3}
+                      value={goalTitle}
+                      onChange={(e) => setGoalTitle(e.target.value)}
+                      placeholder="e.g. Ship a full-stack portfolio project"
+                      className="w-full px-3 py-2 rounded-xl border border-outline/40 bg-surface-container-lowest text-sm text-ink"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">
+                      Target date
+                    </label>
+                    <input
+                      type="date"
+                      value={goalTargetDate}
+                      onChange={(e) => setGoalTargetDate(e.target.value)}
+                      className="px-3 py-2 rounded-xl border border-outline/40 bg-surface-container-lowest text-sm text-ink"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={createGoal.isPending || !goalTitle.trim()}
+                    className="px-5 py-2 rounded-full bg-primary text-white text-xs font-bold hover:bg-primary-700 transition-colors disabled:opacity-60"
+                  >
+                    {createGoal.isPending ? 'Adding...' : 'Add goal'}
+                  </button>
+                </form>
+              </div>
+            )}
+
             {tab === 'goals' &&
               (goalsLoading ? (
                 <div className="h-40 rounded-2xl bg-surface-container animate-pulse" />
@@ -509,22 +699,53 @@ export default function MentorshipsPage() {
                 />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {goals.map((g, i) => (
-                    <div
-                      key={g.id ?? g.ID ?? i}
-                      className="p-5 rounded-2xl bg-surface-container-lowest border border-outline/30 shadow-sm"
-                    >
-                      <h4 className="text-sm font-bold text-ink">
-                        {g.title ?? g.Title ?? 'Goal'}
-                      </h4>
-                      <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-                        {g.description ?? g.Description ?? ''}
-                      </p>
-                      <span className="inline-block mt-3 px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-xs capitalize font-bold">
-                        {g.status ?? g.Status ?? 'pending'}
-                      </span>
-                    </div>
-                  ))}
+                  {goals.map((g, i) => {
+                    const goalId = g.id ?? g.ID
+                    const goalStatus = g.status ?? g.Status ?? 'open'
+                    const nextStatus =
+                      goalStatus === 'open'
+                        ? 'in_progress'
+                        : goalStatus === 'in_progress'
+                          ? 'completed'
+                          : 'open'
+                    const actionLabel =
+                      goalStatus === 'open'
+                        ? 'Start'
+                        : goalStatus === 'in_progress'
+                          ? 'Complete'
+                          : 'Reopen'
+
+                    return (
+                      <div
+                        key={goalId ?? i}
+                        className="p-5 rounded-2xl bg-surface-container-lowest border border-outline/30 shadow-sm"
+                      >
+                        <h4 className="text-sm font-bold text-ink">
+                          {g.title ?? g.Title ?? 'Goal'}
+                        </h4>
+                        <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
+                          {g.description ?? g.Description ?? ''}
+                        </p>
+                        <div className="mt-3 flex items-center justify-between gap-2">
+                          <span className="inline-block px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-xs capitalize font-bold">
+                            {goalStatus}
+                          </span>
+                          {goalId && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateGoal.mutate({ id: goalId, status: nextStatus })
+                              }
+                              disabled={updateGoal.isPending}
+                              className="text-xs font-bold text-primary hover:underline disabled:opacity-60"
+                            >
+                              {actionLabel}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               ))}
 
