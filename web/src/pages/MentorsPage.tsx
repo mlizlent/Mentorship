@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { InitialsAvatar } from '@/components/ui/initials-avatar'
-import { merolineProfile } from '@/data/featuredMentors'
+import { featuredMentors } from '@/data/featuredMentors'
 import { toast } from 'react-toastify'
 
 type Mentor = {
@@ -29,16 +29,19 @@ type Mentor = {
   photo?: string
 }
 
-const merolineMentor: Mentor = {
-  id: merolineProfile.id,
-  full_name: merolineProfile.name,
-  county: merolineProfile.location,
-  bio: merolineProfile.about,
-  expertise: merolineProfile.expertise,
-  hours_per_month: 20,
-  languages: merolineProfile.languages,
-  photo: merolineProfile.photo,
-}
+const featuredMentorsAsMentors: Mentor[] = featuredMentors.map((f) => ({
+  id: f.id,
+  full_name: f.name,
+  county: f.location || 'Kenya',
+  bio: f.about,
+  expertise: f.expertise || [],
+  hours_per_month: 15,
+  languages: f.languages || [],
+  photo: f.photo,
+  status: 'verified',
+}))
+
+const featuredMentorIds = new Set(featuredMentorsAsMentors.map((m) => m.id))
 
 export default function MentorsPage() {
   const [search, setSearch] = useState('')
@@ -63,13 +66,16 @@ export default function MentorsPage() {
   const rawMentors = useMemo(() => data?.data || [], [data])
 
   const mentors = useMemo(() => {
+    const featuredNames = new Set(
+      featuredMentorsAsMentors.map((m) => m.full_name.toLowerCase())
+    )
     const apiMentors = rawMentors.filter(
       (m) =>
-        m.id !== merolineMentor.id &&
-        m.full_name.toLowerCase() !== merolineMentor.full_name.toLowerCase()
+        !featuredMentorIds.has(m.id) &&
+        !featuredNames.has(m.full_name.toLowerCase())
     )
 
-    return [merolineMentor, ...apiMentors].filter((m) => {
+    return [...featuredMentorsAsMentors, ...apiMentors].filter((m) => {
       if (countyFilter !== 'All counties' && m.county !== countyFilter) {
         return false
       }
@@ -98,7 +104,7 @@ export default function MentorsPage() {
     if (!selectedMentor) return
     const mentorId = selectedMentor.id || selectedMentor.user_id || ''
 
-    if (mentorId === merolineProfile.id) {
+    if (featuredMentorIds.has(mentorId)) {
       toast.info(
         'This is a featured profile preview. Pick a verified mentor from the directory to send a request.'
       )
@@ -228,10 +234,6 @@ export default function MentorsPage() {
                       </div>
                     </Link>
                   </div>
-
-                  <p className="text-xs text-neutral-600 line-clamp-3 mb-3 leading-relaxed">
-                    {m.bio || 'Experienced technology mentor dedicated to accelerating women in tech.'}
-                  </p>
 
                   <div className="flex flex-wrap gap-1.5 mb-4">
                     {(m.expertise || []).map((e) => (

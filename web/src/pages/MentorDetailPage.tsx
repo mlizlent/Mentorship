@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
 import { apiClient } from '@/services/api'
-import { merolineProfile } from '@/data/featuredMentors'
+import { merolineProfile, featuredMentors, type FeaturedMentor } from '@/data/featuredMentors'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -45,9 +45,7 @@ function SectionCard({
   )
 }
 
-function MerolineProfile() {
-  const profile = merolineProfile
-
+function FeaturedMentorProfile({ profile }: { profile: FeaturedMentor }) {
   return (
     <div className="space-y-6">
       <Link
@@ -347,7 +345,10 @@ function MentorProfileFallback({ mentor }: { mentor: Mentor }) {
 
 export default function MentorDetailPage() {
   const { id } = useParams()
-  const isMeroline = !id || id === merolineProfile.id || id === 'meroline'
+  const featured =
+    featuredMentors.find((f) => f.id === id) ??
+    (!id || id === 'meroline' ? merolineProfile : undefined)
+  const isFeatured = Boolean(featured)
 
   const { data, isLoading, isError } = useQuery<{ mentor: Mentor }>({
     queryKey: ['mentor', id],
@@ -355,11 +356,11 @@ export default function MentorDetailPage() {
       const res = await apiClient.get<{ mentor: Mentor }>(`/mentors/${id}`)
       return res.data
     },
-    enabled: !isMeroline && Boolean(id),
+    enabled: !isFeatured && Boolean(id),
   })
 
-  if (isMeroline) {
-    return <MerolineProfile />
+  if (featured) {
+    return <FeaturedMentorProfile profile={featured} />
   }
 
   if (isLoading) {
