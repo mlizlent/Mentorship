@@ -3,25 +3,32 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/services/api'
 import { InitialsAvatar } from '@/components/ui/initials-avatar'
-import { merolineProfile } from '@/data/featuredMentors'
+import { featuredMentors } from '@/data/featuredMentors'
 
 type Mentor = {
   id?: string
   full_name: string
+  role?: string
   bio?: string
   county?: string
   expertise?: string[]
   photo?: string
 }
 
-const merolineMentor: Mentor = {
-  id: merolineProfile.id,
-  full_name: merolineProfile.name,
-  bio: merolineProfile.about,
-  county: merolineProfile.location,
-  expertise: merolineProfile.expertise,
-  photo: merolineProfile.photo,
-}
+const featuredMentorsList: Mentor[] = featuredMentors.map((f) => ({
+  id: f.id,
+  full_name: f.name,
+  role: f.role,
+  bio: f.about,
+  county: f.location,
+  expertise: f.expertise,
+  photo: f.photo,
+}))
+
+const featuredMentorIds = new Set(featuredMentorsList.map((m) => m.id))
+const featuredMentorNames = new Set(
+  featuredMentorsList.map((m) => m.full_name.toLowerCase())
+)
 
 const navLinks = [
   { label: 'Home', to: '#home' },
@@ -84,11 +91,11 @@ export default function LandingPage() {
   const mentors = useMemo(
     () =>
       [
-        merolineMentor,
+        ...featuredMentorsList,
         ...apiMentors.filter(
           (m) =>
-            m.id !== merolineMentor.id &&
-            m.full_name.toLowerCase() !== merolineMentor.full_name.toLowerCase()
+            !featuredMentorIds.has(m.id) &&
+            !featuredMentorNames.has(m.full_name.toLowerCase())
         ),
       ],
     [apiMentors]
@@ -209,20 +216,6 @@ export default function LandingPage() {
                   Africa with experienced engineering leaders, product builders,
                   and tech pioneers to accelerate their careers.
                 </p>
-                <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
-                  <Link
-                    to="/mentors"
-                    className="inline-flex items-center justify-center font-label-md text-label-md text-on-primary bg-primary-container hover:bg-primary px-8 py-3.5 rounded-full shadow-lg shadow-primary/25 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    Find a Mentor
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="inline-flex items-center justify-center font-label-md text-label-md text-primary bg-surface-container-lowest/90 backdrop-blur hover:bg-surface-container-low px-8 py-3.5 rounded-full shadow-md shadow-primary/5 transition-all duration-200"
-                  >
-                    Join as a Mentee
-                  </Link>
-                </div>
               </div>
             </div>
           </section>
@@ -339,13 +332,10 @@ export default function LandingPage() {
                               {mentor.full_name}
                             </h3>
                             <p className="font-body-sm text-body-sm text-primary font-semibold leading-snug">
-                              {mentor.expertise?.join(' • ') || 'Technology Leader'}
+                              {mentor.role || mentor.expertise?.join(' • ') || 'Technology Leader'}
                             </p>
                           </div>
                         </div>
-                        <p className="font-body-sm text-body-sm text-on-surface-variant mb-6 leading-normal">
-                          {mentor.bio || mentor.county || 'Verified Mentor'}
-                        </p>
                       </div>
                     </div>
                   ))}
@@ -360,9 +350,6 @@ export default function LandingPage() {
               <div className="bg-gradient-to-br from-surface-container to-surface-container-high rounded-3xl p-10 lg:p-16 shadow-xl relative overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-10">
                 <div className="pointer-events-none absolute -right-20 -bottom-20 w-80 h-80 rounded-full bg-primary/10 blur-3xl" />
                 <div className="max-w-2xl">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-lowest text-primary font-label-sm text-label-sm font-bold shadow-sm mb-4">
-                    Next Cohort Matching Closes Soon
-                  </div>
                   <h2 className="font-headline-xl text-headline-xl text-on-surface tracking-tight mb-4">
                     Ready to crown your tech journey?
                   </h2>

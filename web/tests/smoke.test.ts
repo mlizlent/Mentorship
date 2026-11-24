@@ -8,7 +8,7 @@ test('landing page loads and shows title', async ({ page }) => {
 
 test('navigation links work', async ({ page }) => {
   await page.goto('/')
-  await page.click('a:has-text("Find a Mentor")')
+  await page.click('a:has-text("Explore All Mentors")')
   await expect(page).toHaveURL(/.*\/mentors/)
 })
 
