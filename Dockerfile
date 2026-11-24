@@ -69,11 +69,11 @@ COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
 # Expose ports
-EXPOSE 80 8080
+EXPOSE 80 8080 8081
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/readyz || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-8080}/readyz || exit 1
 
 # Start both services
 ENTRYPOINT ["/docker-entrypoint.sh"]

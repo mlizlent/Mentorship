@@ -3,6 +3,7 @@ services:
     name: crownpath
     runtime: docker
     dockerfilePath: ./Dockerfile
+    healthCheckPath: /readyz
     envVars:
       - key: PORT
         value: 8080
