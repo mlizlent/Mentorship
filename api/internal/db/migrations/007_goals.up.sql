@@ -1,4 +1,3 @@
--- +migrate Up
 CREATE TABLE goals (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     mentorship_id UUID NOT NULL REFERENCES mentorships(id) ON DELETE CASCADE,
@@ -11,8 +10,3 @@ CREATE TABLE goals (
 
 CREATE INDEX idx_goals_mentorship ON goals (mentorship_id);
 CREATE INDEX idx_goals_status ON goals (status);
-
--- +migrate Down
-DROP INDEX IF EXISTS idx_goals_status;
-DROP INDEX IF EXISTS idx_goals_mentorship;
-DROP TABLE IF EXISTS goals;

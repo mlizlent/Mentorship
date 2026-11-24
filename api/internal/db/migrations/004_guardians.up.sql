@@ -1,4 +1,3 @@
--- +migrate Up
 CREATE TABLE guardians (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -11,7 +10,3 @@ CREATE TABLE guardians (
 );
 
 CREATE INDEX idx_guardians_mentee ON guardians (mentee_id);
-
--- +migrate Down
-DROP INDEX IF EXISTS idx_guardians_mentee;
-DROP TABLE IF EXISTS guardians;

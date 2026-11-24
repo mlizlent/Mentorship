@@ -1,4 +1,3 @@
--- +migrate Up
 CREATE TABLE notifications_outbox (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -13,8 +12,3 @@ CREATE TABLE notifications_outbox (
 
 CREATE INDEX idx_notifications_outbox_send_at ON notifications_outbox (send_at) WHERE sent_at IS NULL;
 CREATE INDEX idx_notifications_outbox_user ON notifications_outbox (user_id);
-
--- +migrate Down
-DROP INDEX IF EXISTS idx_notifications_outbox_user;
-DROP INDEX IF EXISTS idx_notifications_outbox_send_at;
-DROP TABLE IF EXISTS notifications_outbox;

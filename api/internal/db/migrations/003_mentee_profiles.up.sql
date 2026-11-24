@@ -1,4 +1,3 @@
--- +migrate Up
 CREATE TABLE mentee_profiles (
     user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     goals TEXT NOT NULL DEFAULT '',
@@ -9,6 +8,3 @@ CREATE TABLE mentee_profiles (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
--- +migrate Down
-DROP TABLE IF EXISTS mentee_profiles;

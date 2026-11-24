@@ -1,4 +1,3 @@
--- +migrate Up
 CREATE TABLE refresh_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -10,8 +9,3 @@ CREATE TABLE refresh_tokens (
 
 CREATE INDEX idx_refresh_tokens_user ON refresh_tokens (user_id);
 CREATE INDEX idx_refresh_tokens_expires ON refresh_tokens (expires_at);
-
--- +migrate Down
-DROP INDEX IF EXISTS idx_refresh_tokens_expires;
-DROP INDEX IF EXISTS idx_refresh_tokens_user;
-DROP TABLE IF EXISTS refresh_tokens;

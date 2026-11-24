@@ -1,4 +1,3 @@
--- +migrate Up
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE users (
@@ -18,8 +17,3 @@ CREATE TABLE users (
 
 CREATE INDEX idx_users_email_lower ON users (LOWER(email));
 CREATE INDEX idx_users_status ON users (status);
-
--- +migrate Down
-DROP INDEX IF EXISTS idx_users_status;
-DROP INDEX IF EXISTS idx_users_email_lower;
-DROP TABLE IF EXISTS users;

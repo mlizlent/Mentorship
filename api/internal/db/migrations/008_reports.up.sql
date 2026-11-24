@@ -1,4 +1,3 @@
--- +migrate Up
 CREATE TABLE reports (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     reporter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -12,8 +11,3 @@ CREATE TABLE reports (
 
 CREATE INDEX idx_reports_target ON reports (target_user_id);
 CREATE INDEX idx_reports_status ON reports (status);
-
--- +migrate Down
-DROP INDEX IF EXISTS idx_reports_status;
-DROP INDEX IF EXISTS idx_reports_target;
-DROP TABLE IF EXISTS reports;

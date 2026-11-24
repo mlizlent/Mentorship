@@ -1,4 +1,3 @@
--- +migrate Up
 CREATE TABLE sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     mentorship_id UUID NOT NULL REFERENCES mentorships(id) ON DELETE CASCADE,
@@ -17,9 +16,3 @@ CREATE TABLE sessions (
 CREATE INDEX idx_sessions_mentorship ON sessions (mentorship_id);
 CREATE INDEX idx_sessions_scheduled_at ON sessions (scheduled_at);
 CREATE INDEX idx_sessions_status ON sessions (status);
-
--- +migrate Down
-DROP INDEX IF EXISTS idx_sessions_status;
-DROP INDEX IF EXISTS idx_sessions_scheduled_at;
-DROP INDEX IF EXISTS idx_sessions_mentorship;
-DROP TABLE IF EXISTS sessions;
