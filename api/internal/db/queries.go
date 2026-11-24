@@ -46,7 +46,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id string) (*User, error) {
 	var u User
 	var dob interface{}
 	err := q.conn.QueryRow(ctx, `
-		SELECT id, email, password_hash, role, full_name, date_of_birth, county, language, status, avatar_url, created_at, updated_at
+		SELECT id, email, password_hash, role, full_name, date_of_birth, COALESCE(county, ''), language, status, COALESCE(avatar_url, ''), created_at, updated_at
 		FROM users WHERE id = $1 AND deleted_at IS NULL
 	`, id).Scan(
 		&u.ID, &u.Email, &u.PasswordHash, &u.Role, &u.FullName, &dob, &u.County, &u.Language, &u.Status, &u.AvatarURL, &u.CreatedAt, &u.UpdatedAt,
