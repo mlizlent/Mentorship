@@ -30,7 +30,7 @@ export default function RegisterPage() {
         setError(err.error?.message || 'Registration failed')
         return
       }
-      navigate('/home')
+      navigate('/dashboard')
     } catch {
       setError('Something went wrong')
     }
