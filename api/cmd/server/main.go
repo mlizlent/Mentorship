@@ -69,17 +69,8 @@ func main() {
 	}
 	defer pool.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	if err := pool.Ping(ctx); err != nil {
-		cancel()
-		slog.Error("database not reachable", "error", err)
-		os.Exit(1)
-	}
-	cancel()
-
 	if err := db.Migrate(cfg.DatabaseURL); err != nil {
-		slog.Error("failed to run migrations", "error", err)
-		os.Exit(1)
+		slog.Error("failed to run migrations (may already be applied)", "error", err)
 	}
 
 	queries := db.New(pool)
@@ -213,7 +204,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	ctx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		slog.Error("server forced to shutdown", "error", err)
