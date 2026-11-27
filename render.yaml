@@ -46,9 +46,9 @@ services:
       - key: SMTP_FROM
         value: noreply@crownpath.app
       - key: FRONTEND_URL
-        value: https://crownpath.onrender.com
+        value: https://mentorship-h3wi.onrender.com
       - key: VITE_API_URL
-        value: https://crownpath.onrender.com/api/v1
+        value: /api/v1
 
 databases:
   - name: crownpath-db

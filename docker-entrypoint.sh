@@ -8,6 +8,12 @@ export PORT=8081
 
 sed -i "s/listen 80;/listen ${PUBLIC_PORT};/" /etc/nginx/conf.d/default.conf
 
+if [ -z "$DATABASE_URL" ]; then
+    echo "WARNING: DATABASE_URL is not set; PostgreSQL will use the local development default."
+fi
+
+nginx -t
+
 # Wait for database to be ready
 echo "Waiting for database..."
 for i in $(seq 1 30); do

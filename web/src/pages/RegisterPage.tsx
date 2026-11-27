@@ -19,7 +19,7 @@ export default function RegisterPage() {
     e.preventDefault()
     setError('')
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'}/auth/register`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api/v1'}/auth/register`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
