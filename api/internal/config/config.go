@@ -72,6 +72,12 @@ func Load() (*Config, error) {
 		GuardianCanViewMessages: getEnvBool("GUARDIAN_CAN_VIEW_MESSAGES", true),
 	}
 
+	if cfg.Environment == "production" {
+		if _, configured := osLookup("DATABASE_URL"); !configured {
+			return nil, fmt.Errorf("DATABASE_URL is required in production")
+		}
+	}
+
 	return cfg, nil
 }
 
