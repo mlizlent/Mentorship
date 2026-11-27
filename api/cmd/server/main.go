@@ -106,6 +106,7 @@ func main() {
 		r.Route("/me", func(r chi.Router) {
 			r.Get("/", authService.AuthMiddleware(usersService.GetMe))
 			r.Put("/", authService.AuthMiddleware(usersService.UpdateMe))
+			r.Post("/avatar", authService.AuthMiddleware(usersService.UploadAvatar))
 			r.Post("/reports", authService.AuthMiddleware(usersService.CreateReport))
 			r.Get("/export", authService.AuthMiddleware(usersService.ExportMe))
 			r.Delete("/", authService.AuthMiddleware(usersService.DeleteMe))
