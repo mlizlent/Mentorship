@@ -69,8 +69,17 @@ func main() {
 	}
 	defer pool.Close()
 
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	if err := pool.Ping(ctx); err != nil {
+		cancel()
+		slog.Error("database not reachable", "error", err)
+		os.Exit(1)
+	}
+	cancel()
+
 	if err := db.Migrate(cfg.DatabaseURL); err != nil {
-		slog.Error("failed to run migrations (may already be applied)", "error", err)
+		slog.Error("failed to run migrations", "error", err)
+		os.Exit(1)
 	}
 
 	queries := db.New(pool)

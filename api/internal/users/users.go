@@ -2,6 +2,7 @@ package users
 
 import (
 	"encoding/base64"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -122,6 +123,7 @@ func (s *Service) Register(w http.ResponseWriter, r *http.Request) {
 
 	userID := uuid.New()
 	if _, err := s.queries.CreateUser(r.Context(), userID.String(), req.Email, hash, req.Role, req.FullName, &req.DateOfBirth, req.County, req.Language); err != nil {
+		slog.Error("failed to create user", "error", err)
 		httpx.WriteError(w, "internal", "could not create user", nil)
 		return
 	}
@@ -162,6 +164,7 @@ func (s *Service) Register(w http.ResponseWriter, r *http.Request) {
 	}
 	expiresAt := time.Now().Add(s.cfg.RefreshTokenTTL).Format(time.RFC3339)
 	if err := s.queries.CreateRefreshToken(r.Context(), userID.String(), refreshHash, expiresAt); err != nil {
+		slog.Error("failed to store refresh token", "error", err)
 		httpx.WriteError(w, "internal", "could not store refresh token", nil)
 		return
 	}
