@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -34,13 +36,27 @@ func Open(databaseURL string, maxOpenConns int) (*pgxpool.Pool, error) {
 }
 
 func Migrate(databaseURL string) error {
-	// Try multiple paths for migrations (local dev vs deployed vs container)
-	paths := []string{
-		"file:///migrations",
-		"file://migrations",
-		"file://internal/db/migrations",
-		"file://./internal/db/migrations",
-		"file://api/internal/db/migrations",
+	candidates := []string{
+		"/migrations",
+		"migrations",
+		"internal/db/migrations",
+		"api/internal/db/migrations",
+	}
+
+	var paths []string
+	for _, candidate := range candidates {
+		absolutePath, err := filepath.Abs(candidate)
+		if err != nil {
+			continue
+		}
+		info, err := os.Stat(absolutePath)
+		if err == nil && info.IsDir() {
+			paths = append(paths, "file://"+filepath.ToSlash(absolutePath))
+		}
+	}
+
+	if len(paths) == 0 {
+		return fmt.Errorf("migration directory not found")
 	}
 
 	var lastErr error
